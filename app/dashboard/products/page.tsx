@@ -5,16 +5,19 @@ import { UltraDropdown } from "@/components/UltraDropdown"; // تأكد من و�
 import { AddProductModal } from "@/components/AddProductModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCategories } from "@/hooks/categories";
+import { useProductForm } from "@/hooks/products";
 
 export default function ProductsPage() {
   const { categories } = useCategories()
-  const [isModalOpen, setIsModalOpen] = useState(false);
   
+  const productForm = useProductForm(() => productForm.setIsModalOpen(false));
+  
+  const { 
+    products, setProducts, clickEdit, isModalOpen, 
+    setIsModalOpen, resetForm 
+  } = productForm;
   // الحالة الخاصة بالمنتجات
-  const [products, setProducts] = useState([
-    { id: 1, name: "iPhone 15 Pro", cat: "إلكترونيات", price: "1200", stock: 12, slug: "electronics" },
-    { id: 2, name: "كرسي مكتب مريح", cat: "أثاث", price: "150", stock: 0, slug: "furniture" },
-  ]);
+ 
 
   // دالة الحذف
   const handleDeleteProduct = (id: number) => {
@@ -36,7 +39,10 @@ export default function ProductsPage() {
           <Package className="text-blue-600" /> إدارة المنتجات
         </h1>
         <button 
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            resetForm(); // تصفير الحقول قبل فتح المودال للإضافة
+            setIsModalOpen(true);
+          }}
           className="bg-blue-600 text-white px-5 py-2.5 rounded-xl flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95"
         >
           <Plus size={18} /> إضافة منتج
@@ -67,7 +73,7 @@ export default function ProductsPage() {
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{product.name}</td>
-                    <td className="px-6 py-4 text-slate-500">{product.cat}</td>
+                    <td className="px-6 py-4 text-slate-500">{product.category?.name}</td>
                     <td className="px-6 py-4 font-bold text-blue-600">€{product.price}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-red-50 text-red-600 dark:bg-red-900/20'}`}>
@@ -78,7 +84,7 @@ export default function ProductsPage() {
                       {/* استخدام الـ Dropdown وتمرير الدوال المطلوبة */}
                       <UltraDropdown 
                         onDelete={() => handleDeleteProduct(product.id)} 
-                        onEdit={() => alert("سيتم فتح مودال التعديل")} 
+                        onEdit={() => clickEdit(product)} 
                         onView={() => handleViewProduct(product)}
                       />
                     </td>
@@ -94,6 +100,7 @@ export default function ProductsPage() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         categories={categories} // مرر الأقسام هنا
+        productForm={productForm} // تمرير الهوك
       />
     </div>
   );

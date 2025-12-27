@@ -6,12 +6,12 @@ import axios from "axios";
 import { useProductForm } from "@/hooks/products";
 
 
-export const AddProductModal = ({ isOpen, onClose, categories }: any) => {
+export const AddProductModal = ({ isOpen, onClose, categories , productForm }: any) => {
     
     const { 
         formData, setFormData, fileInputRef, selectedImage, 
-        loading, handleFileChange, handleSubmit 
-    } = useProductForm(onClose);
+        loading, handleFileChange, handleSubmit, isEditing 
+    } = productForm;
 
 
     return (
@@ -27,6 +27,7 @@ export const AddProductModal = ({ isOpen, onClose, categories }: any) => {
                                 <h2 className="text-2xl font-bold flex items-center gap-3">
                                     <div className="p-2 bg-blue-600 rounded-lg text-white"><Package size={22} /></div>
                                     إضافة منتج جديد
+
                                 </h2>
                                 <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X size={20} /></button>
                             </div>
@@ -82,7 +83,7 @@ export const AddProductModal = ({ isOpen, onClose, categories }: any) => {
 
                                 <button disabled={loading} type="submit" className="md:col-span-2 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-50">
                                     {loading ? <Loader2 className="animate-spin" /> : <CheckCircle2 size={20} />}
-                                    نشر المنتج
+                                   {isEditing ? "حفظ التغييرات" : "إضافة المنتج"}
                                 </button>
                             </form>
                         </div>
