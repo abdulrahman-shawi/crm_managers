@@ -1,8 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
 import { FolderPlus, Edit, Trash2, Layers, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
 import { ToastAdd, ToastDELETE, ToastEdit } from "@/components/system/toast";
 import { useCategories } from "@/hooks/categories";
 
