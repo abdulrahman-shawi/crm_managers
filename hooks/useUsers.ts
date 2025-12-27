@@ -20,8 +20,10 @@ export const useUsers = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get("/api/users");
-            setUsers(res.data.users || []);
+            const res = await axios.get("/api/users", {
+            headers: { 'Cache-Control': 'no-cache' }
+        });
+            setUsers(res.data || []);
         } catch (err) {
             console.error("فشل جلب البيانات", err);
         }
