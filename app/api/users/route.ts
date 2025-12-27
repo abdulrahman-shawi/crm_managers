@@ -10,7 +10,11 @@ export async function GET(request: NextRequest) {
         const users = await prisma.user.findMany();
 
         // إعادة النتيجة كـ JSON
-        return NextResponse.json({ users, status: 201 });
+        return new Response(JSON.stringify(users), {
+        status: 200,
+        headers: {      
+            'Content-Type': 'application/json'}
+    });
     } catch (error: any) {
         console.error("Error fetching users:", error);
 
