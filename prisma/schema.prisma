@@ -11,6 +11,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // 1. نظام المستخدمين والصلاحيات
@@ -58,14 +59,15 @@ model Customer {
 
 // 4. المنتجات والمخزن
 model Product {
-  id          Int           @id @default(autoincrement())
-  name        String
-  price       Float
-  stock       Int           @default(0)
-  categoryId  Int?
-  category    Category?     @relation(fields: [categoryId], references: [id])
+  id           Int           @id @default(autoincrement())
+  name         String
+  price        Float
+  stock        Int           @default(0)
+  image        String?       // 👈 أضف هذا الحقل لحفظ رابط الصورة
+  categoryId   Int?
+  category     Category?     @relation(fields: [categoryId], references: [id])
   invoiceItems InvoiceItem[]
-  createdAt   DateTime      @default(now())
+  createdAt    DateTime      @default(now())
 }
 
 // 5. الفواتير (مقبوضات ومدفوعات)

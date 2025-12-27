@@ -4,8 +4,10 @@ import { Package, Plus, Search, Filter, MoreHorizontal, Eye, Edit, Trash2 } from
 import { UltraDropdown } from "@/components/UltraDropdown"; // تأكد من وجود المكون
 import { AddProductModal } from "@/components/AddProductModal";
 import { AnimatePresence, motion } from "framer-motion";
+import { useCategories } from "@/hooks/categories";
 
 export default function ProductsPage() {
+  const { categories } = useCategories()
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // الحالة الخاصة بالمنتجات
@@ -91,7 +93,7 @@ export default function ProductsPage() {
       <AddProductModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        categories={[]} // مرر الأقسام هنا
+        categories={categories} // مرر الأقسام هنا
       />
     </div>
   );
