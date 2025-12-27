@@ -7,7 +7,9 @@ export async function GET(request: NextRequest) {
 
     try {
         // جلب جميع المستخدمين من جدول User
-        const users = await prisma.user.findMany();
+        const users = await prisma.user.findMany(
+                {orderBy: { createdAt: "desc" }}
+        );
 
         // إعادة النتيجة كـ JSON
         return new Response(JSON.stringify(users), {
