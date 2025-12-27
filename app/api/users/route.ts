@@ -7,10 +7,9 @@ export async function GET(request: NextRequest) {
     try {
         // جلب جميع المستخدمين من جدول User
         const users = await prisma.user.findMany();
-        const cat = await prisma.category.findMany();
 
         // إعادة النتيجة كـ JSON
-        return NextResponse.json({ users, cat });
+        return NextResponse.json({ users, status: 200 });
     } catch (error: any) {
         console.error("Error fetching users:", error);
 
