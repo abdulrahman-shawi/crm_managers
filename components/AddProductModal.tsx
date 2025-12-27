@@ -4,12 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Package, Tag, Euro, Database, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
 import axios from "axios";
 
+
 export const AddProductModal = ({ isOpen, onClose, categories }: any) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
-
+    
     // حقول النموذج
     const [formData, setFormData] = useState({
         name: "",
