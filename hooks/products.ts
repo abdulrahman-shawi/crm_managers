@@ -1,55 +1,81 @@
-import { useState } from "react";
+import axios from "axios";
+import { useEffect, useRef, useState } from "react";
 
-// 1. تحديث الواجهة لتدعم الملف الاختياري
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    stock: number;
-    categoryId: number;
-    createdAt: string;
-    imageFile?: File | null; // أضفنا علامة الاستفهام لأنه قد لا يوجد ملف في البداية
-    imageUrl?: string;      // يفضل إضافة حقل للرابط الراجع من السيرفر
-}
-
-export function useProducts() {
-    const [products, setProducts] = useState<Product[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isOpen, setIsOpen] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
-
-    // 2. تحديث الحالة الابتدائية لتطابق الواجهة
-    const initialProductState: Product = {
-        id: 0,
+export function useProductForm(onSuccess: () => void) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [file, setFile] = useState<File | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    
+    const initialData = {
         name: "",
-        price: 0,
-        stock: 0,
-        categoryId: 0,
-        createdAt: new Date().toISOString(), // قيمة ابتدائية للتاريخ
-        imageFile: null,
+        categoryId: "",
+        price: "",
+        stock: ""
+    };
+    const [formData, setFormData] = useState(initialData);
+
+    // تنظيف الذاكرة عند تغيير الصورة أو إغلاق الهوك
+    useEffect(() => {
+        return () => {
+            if (selectedImage) URL.revokeObjectURL(selectedImage);
+        };
+    }, [selectedImage]);
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const selectedFile = event.target.files?.[0];
+        if (selectedFile) {
+            if (selectedImage) URL.revokeObjectURL(selectedImage); // حذف القديمة
+            setFile(selectedFile);
+            setSelectedImage(URL.createObjectURL(selectedFile));
+        }
     };
 
-    const [currentProd, setCurrentProd] = useState<Product>(initialProductState);
+    const resetForm = () => {
+        setFormData(initialData);
+        setFile(null);
+        setSelectedImage(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
 
-    // 3. دالة لتصفير المنتج (تحتاجها عند إغلاق المودال أو بعد الإضافة)
-    const resetCurrentProduct = () => {
-        setCurrentProd(initialProductState);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!file) {
+            alert("الرجاء اختيار صورة أولاً");
+            return;
+        }
+
+        setLoading(true);
+        const data = new FormData();
+        data.append("file", file);
+        data.append("name", formData.name);
+        data.append("categoryId", formData.categoryId);
+        data.append("price", formData.price);
+        data.append("stock", formData.stock);
+
+        try {
+            const res = await axios.post("/api/dashboard/products", data);
+            if (res.data.success) {
+                alert("✅ تم إضافة المنتج بنجاح!");
+                resetForm();
+                onSuccess(); // استدعاء دالة الإغلاق أو التحديث
+            }
+        } catch (error: any) {
+            const msg = error.response?.data?.message || "حدث خطأ في الرفع";
+            alert(`❌ فشل: ${msg}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return {
-        products,
-        setProducts,
-        isLoading,
-        setIsLoading,
-        isOpen,
-        setIsOpen,
-        isEditing,
-        setIsEditing,
-        toastType,
-        setToastType,
-        currentProd,
-        setCurrentProd,
-        resetCurrentProduct
+        formData,
+        setFormData,
+        fileInputRef,
+        selectedImage,
+        loading,
+        handleFileChange,
+        handleSubmit,
+        resetForm
     };
 }

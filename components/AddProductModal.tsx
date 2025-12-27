@@ -3,69 +3,16 @@ import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Package, Tag, Euro, Database, Image as ImageIcon, CheckCircle2, Loader2 } from "lucide-react";
 import axios from "axios";
+import { useProductForm } from "@/hooks/products";
 
 
 export const AddProductModal = ({ isOpen, onClose, categories }: any) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
-    const [file, setFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
     
-    // حقول النموذج
-    const [formData, setFormData] = useState({
-        name: "",
-        categoryId: "",
-        price: "",
-        stock: "",
-        imageUrl: ""
-    });
+    const { 
+        formData, setFormData, fileInputRef, selectedImage, 
+        loading, handleFileChange, handleSubmit 
+    } = useProductForm(onClose);
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = event.target.files?.[0];
-        if (selectedFile) {
-            setFile(selectedFile);
-            setSelectedImage(URL.createObjectURL(selectedFile));
-        }
-    };
-
-    // ... داخل مكون AddProductModal ...
-
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!file) {
-        alert("الرجاء اختيار صورة أولاً");
-        return;
-    }
-
-    setLoading(true);
-    const data = new FormData();
-    data.append("file", file);
-    data.append("name", formData.name);
-    data.append("categoryId", formData.categoryId);
-    data.append("price", formData.price);
-    data.append("stock", formData.stock);
-
-    try {
-        const res = await axios.post("/api/dashboard/products", data);
-        
-        if (res.data.success) {
-            alert("✅ تم إضافة المنتج بنجاح!");
-            // تصفير النموذج
-            setFormData({ name: "", categoryId: "", price: "", stock: "", imageUrl: "" });
-            setSelectedImage(null);
-            setFile(null);
-            onClose();
-        }
-    } catch (error: any) {
-        // استخراج رسالة الخطأ من السيرفر إذا وجدت، وإلا إظهار رسالة عامة
-        const errorMessage = error.response?.data?.message || "حدث خطأ أثناء الاتصال بالسيرفر";
-        console.error("Upload Error:", error);
-        alert(`❌ فشل الرفع: ${errorMessage}`);
-    } finally {
-        setLoading(false);
-    }
-};
 
     return (
         <AnimatePresence>
