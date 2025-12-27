@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; // يمنع التخزين المؤقت تماماً
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 

@@ -39,6 +39,7 @@ export const useUsers = () => {
                 // نأخذ المستخدم الجديد من استجابة السيرفر
                 const createdUser = res.data.user || res.data; 
                 setUsers((prev) => [...prev, createdUser]);
+                await fetchUsers();
                 showToast("add");
                 setIsModalOpen(false); // إغلاق المودال تلقائياً
             }
