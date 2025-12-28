@@ -6,6 +6,7 @@ import {
   ArrowUpRight, LayoutGrid, ArrowDownRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 export default function FixedExpensesPage() {
   const [expenses, setExpenses] = useState([
@@ -19,12 +20,21 @@ export default function FixedExpensesPage() {
 
   const totalFixed = expenses.reduce((sum, item) => sum + item.amount, 0);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
       setExpenses(expenses.map(item => item.id === editingId ? { ...item, ...formData, amount: parseFloat(formData.amount) } : item));
     } else {
+      const res = await axios.post('/api/dashboard/fixed-expenses', { 
+        title: formData.title, 
+        amount: parseFloat(formData.amount), 
+        date: formData.date || "01 كل شهر" 
+      });
+      if (res.status === 201) 
+      {
+
       setExpenses([...expenses, { id: Date.now(), ...formData, amount: parseFloat(formData.amount), date: formData.date || "01 كل شهر" }]);
+      }
     }
     closeModal();
   };

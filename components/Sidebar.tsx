@@ -31,6 +31,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         { icon: Receipt, label: "الأقسام", href: "/dashboard/categories" },
         { icon: Box, label: "المخزن والمنتجات", href: "/dashboard/products" },
         { icon: Users, label: "العملاء", href: "/dashboard/customers" },
+        { icon: FileText, label: "المصاريف الثابتة", href: "/dashboard/fixed-expenses" },
       ]
     },
     {

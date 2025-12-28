@@ -1,30 +1,88 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-// 1. نظام المستخدمين والصلاحيات
 model User {
-  id            Int       @id @default(autoincrement())
-  name          String
-  email         String    @unique
-  password      String    
-  image         String?   
-  role          Role      @default(USER)
-  isActive      Boolean   @default(true)
-  lastLogin     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  image     String?
+  role      Role      @default(USER)
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  color       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Customer {
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String?   @unique
+  phone     String?
+  address   String?
+  createdAt DateTime  @default(now())
+  invoices  Invoice[]
+}
+
+model Product {
+  id           Int           @id @default(autoincrement())
+  name         String
+  price        Float
+  stock        Int           @default(0)
+  categoryId   Int?
+  createdAt    DateTime      @default(now())
+  image        String?
+  invoiceItems InvoiceItem[]
+  category     Category?     @relation(fields: [categoryId], references: [id])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  type        InvoiceType   @default(REVENUE)
+  status      InvoiceStatus @default(PENDING)
+  totalAmount Float
+  date        DateTime      @default(now())
+  customerId  Int?
+  createdAt   DateTime      @default(now())
+  customer    Customer?     @relation(fields: [customerId], references: [id])
+  items       InvoiceItem[]
+}
+
+model InvoiceItem {
+  id        Int     @id @default(autoincrement())
+  invoiceId String
+  productId Int
+  quantity  Int     @default(1)
+  unitPrice Float
+  discount  Float   @default(0)
+  note      String?
+  subTotal  Float
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model FixedExpense {
+  id        Int      @id @default(autoincrement())
+  name      String
+  amount    Float
+  dueDate   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 enum Role {
@@ -33,91 +91,12 @@ enum Role {
   USER
 }
 
-// 2. التصنيفات (تنظم المنتجات والمصروفات)
-model Category {
-  id          Int            @id @default(autoincrement())
-  name        String         @unique
-  description String?
-  color       String?        // لتمييز التصنيف في الواجهة
-  products    Product[]
-  expenses    FixedExpense[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-}
-
-// 3. العملاء والموردين
-model Customer {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String?   @unique
-  phone     String?
-  address   String?
-  invoices  Invoice[] 
-  createdAt DateTime  @default(now())
-}
-
-// 4. المنتجات والمخزن
-model Product {
-  id           Int           @id @default(autoincrement())
-  name         String
-  price        Float
-  stock        Int           @default(0)
-  image        String?       // 👈 أضف هذا الحقل لحفظ رابط الصورة
-  categoryId   Int?
-  category     Category?     @relation(fields: [categoryId], references: [id])
-  invoiceItems InvoiceItem[]
-  createdAt    DateTime      @default(now())
-}
-
-// 5. الفواتير (مقبوضات ومدفوعات)
-model Invoice {
-  id          String        @id @default(cuid()) // مثال: clp123... أو تنسيق مخصص
-  type        InvoiceType   @default(REVENUE)
-  status      InvoiceStatus @default(PENDING)
-  totalAmount Float
-  date        DateTime      @default(now())
-  
-  customerId  Int?
-  customer    Customer?     @relation(fields: [customerId], references: [id])
-  
-  items       InvoiceItem[]
-  createdAt   DateTime      @default(now())
-}
-
 enum InvoiceType {
-  REVENUE    // مقبوضات
-  EXPENSE    // مدفوعات
+  REVENUE
+  EXPENSE
 }
 
 enum InvoiceStatus {
-  PAID       // مدفوعة
-  PENDING    // معلقة
-}
-
-// 6. تفاصيل الفاتورة (الخصم والملاحظات لكل بند)
-model InvoiceItem {
-  id         Int      @id @default(autoincrement())
-  invoiceId  String
-  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  
-  productId  Int
-  product    Product  @relation(fields: [productId], references: [id])
-  
-  quantity   Int      @default(1)
-  unitPrice  Float    // السعر وقت البيع
-  discount   Float    @default(0) // الخصم لكل منتج
-  note       String?  // ملاحظات لكل منتج
-  subTotal   Float    // الإجمالي بعد الخصم
-}
-
-// 7. المصروفات الثابتة (مثل واجهة الإيجار في مشروعك)
-model FixedExpense {
-  id          Int      @id @default(autoincrement())
-  name        String   // مثل: إيجار المكتب الرئيسي
-  amount      Float
-  categoryId  Int?
-  category    Category? @relation(fields: [categoryId], references: [id])
-  dueDate     String   // يوم الاستحقاق شهرياً
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  PAID
+  PENDING
 }
