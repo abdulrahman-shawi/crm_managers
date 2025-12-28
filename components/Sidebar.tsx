@@ -36,7 +36,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
       group: "الموارد",
       items: [
         user?.role === "ADMIN" ?{ icon: Users, label: "المستخدمين", href: "/dashboard/users" }: null,
-        { icon: FileText, label: "التقارير", href: "/dashboard/reports" },
+        { icon: FileText, label: "الفواتير", href: "/dashboard/invoices" },
       ].filter(Boolean) as MenuItem[],
     },
     {

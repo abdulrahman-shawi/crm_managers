@@ -67,9 +67,10 @@ export async function POST(request: Request) {
         // تحويل categoryId لرقم فقط إذا كان موجوداً
         categoryId: categoryId ? parseInt(categoryId) : null,
       },
+      include:{category:true}
     });
 
-    return NextResponse.json({ success: true, data: product });
+    return NextResponse.json({ success: true, product: product });
 
   } catch (error: any) {
     console.error("خطأ في الخادم:", error);

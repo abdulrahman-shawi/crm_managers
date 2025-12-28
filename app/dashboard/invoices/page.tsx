@@ -166,6 +166,8 @@ function AddInvoiceModal({ isOpen, onClose, type }: any) {
         { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 }
     ]);
 
+    const [searchQueries, setSearchQueries] = useState<{ [key: number]: string }>({});
+    const [showDropdown, setShowDropdown] = useState<{ [key: number]: boolean }>({});
     const addNewItem = () => {
         setItems([...items, { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 }]);
     };
@@ -179,6 +181,8 @@ function AddInvoiceModal({ isOpen, onClose, type }: any) {
             item.productId = value;
             item.name = product?.name || "";
             item.price = product?.price || 0;
+            setSearchQueries({ ...searchQueries, [index]: product?.name || "" });
+            setShowDropdown({ ...showDropdown, [index]: false });
         } else {
             (item as any)[field] = value;
         }
@@ -240,14 +244,44 @@ function AddInvoiceModal({ isOpen, onClose, type }: any) {
                         <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 items-center">
                             <div className="md:col-span-3">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">المنتج</label>
-                                <select
-                                    value={item.productId}
-                                    onChange={(e) => updateItem(index, "productId", e.target.value)}
+                                <input
+                                    type="text"
+                                    value={searchQueries[index] || item.name}
+                                    placeholder="اكتب اسم المنتج..."
+                                    onFocus={() => setShowDropdown({ ...showDropdown, [index]: true })}
+                                    onChange={(e) => {
+                                        setSearchQueries({ ...searchQueries, [index]: e.target.value });
+                                        setShowDropdown({ ...showDropdown, [index]: true });
+                                    }}
                                     className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl border-none outline-none font-bold text-sm shadow-sm"
-                                >
-                                    <option value="">اختر منتجاً...</option>
-                                    {availableProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
+                                />
+                                
+                                {/* قائمة البحث المنسدلة */}
+                                <AnimatePresence>
+                                    {showDropdown[index] && (
+                                        <motion.div 
+                                            initial={{ opacity: 0, y: -10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0 }}
+                                            className="absolute z-[210] w-[350px] mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto"
+                                        >
+                                            {availableProducts
+                                                .filter(p => p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase()))
+                                                .map(product => (
+                                                    <div
+                                                        key={product.id}
+                                                        onClick={() => updateItem(index, "productId", product.id.toString())}
+                                                        className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0"
+                                                    >
+                                                        {product.name} <span className="text-blue-500 mr-2 text-xs">€{product.price}</span>
+                                                    </div>
+                                                ))}
+                                            {availableProducts.filter(p => p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase())).length === 0 && (
+                                                <div className="p-4 text-xs text-slate-400 text-center">لا توجد نتائج</div>
+                                            )}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
                             <div className="md:col-span-1">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">الكمية</label>

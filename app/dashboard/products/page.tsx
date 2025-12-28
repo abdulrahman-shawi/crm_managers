@@ -6,25 +6,19 @@ import { AddProductModal } from "@/components/AddProductModal";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCategories } from "@/hooks/categories";
 import { useProductForm } from "@/hooks/products";
+import { ToastAdd, ToastDELETE, ToastEdit } from "@/components/system/toast";
 
 export default function ProductsPage() {
   const { categories } = useCategories()
-  
+
   const productForm = useProductForm(() => productForm.setIsModalOpen(false));
-  
-  const { 
-    products, setProducts, clickEdit, isModalOpen, 
-    setIsModalOpen, resetForm 
+
+  const {
+    products, setProducts, clickEdit, isModalOpen,
+    setIsModalOpen, resetForm, handleDeleteProduct, toastType, setToastType
   } = productForm;
   // الحالة الخاصة بالمنتجات
- 
 
-  // دالة الحذف
-  const handleDeleteProduct = (id: number) => {
-    if (confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) {
-      setProducts(products.filter(p => p.id !== id));
-    }
-  };
 
   // دالة العرض (يمكنك ربطها بصفحة تفاصيل أو مودال عرض)
   const handleViewProduct = (product: any) => {
@@ -38,7 +32,7 @@ export default function ProductsPage() {
         <h1 className="text-2xl font-bold flex items-center gap-2 text-slate-900 dark:text-white">
           <Package className="text-blue-600" /> إدارة المنتجات
         </h1>
-        <button 
+        <button
           onClick={() => {
             resetForm(); // تصفير الحقول قبل فتح المودال للإضافة
             setIsModalOpen(true);
@@ -55,6 +49,7 @@ export default function ProductsPage() {
           <table className="w-full text-right">
             <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs uppercase tracking-wider font-bold">
               <tr>
+                <th className="px-6 py-4">الصورة</th>
                 <th className="px-6 py-4">المنتج</th>
                 <th className="px-6 py-4">القسم</th>
                 <th className="px-6 py-4">السعر</th>
@@ -65,13 +60,16 @@ export default function ProductsPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               <AnimatePresence>
                 {products.map((product) => (
-                  <motion.tr 
+                  <motion.tr
                     key={product.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, x: -20 }}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                   >
+                    <td className="px-6 py-4">
+                      {product.image ? <img src={product.image} alt={product.name} className="h-12 w-12 object-contain rounded-lg" /> : <div className="h-12 w-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400">{product.name.charAt(0)}</div>}
+                    </td>
                     <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">{product.name}</td>
                     <td className="px-6 py-4 text-slate-500">{product.category?.name}</td>
                     <td className="px-6 py-4 font-bold text-blue-600">€{product.price}</td>
@@ -82,9 +80,9 @@ export default function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 text-left">
                       {/* استخدام الـ Dropdown وتمرير الدوال المطلوبة */}
-                      <UltraDropdown 
-                        onDelete={() => handleDeleteProduct(product.id)} 
-                        onEdit={() => clickEdit(product)} 
+                      <UltraDropdown
+                        onDelete={() => handleDeleteProduct(product.id)}
+                        onEdit={() => clickEdit(product)}
                         onView={() => handleViewProduct(product)}
                       />
                     </td>
@@ -96,12 +94,16 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      <AddProductModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         categories={categories} // مرر الأقسام هنا
         productForm={productForm} // تمرير الهوك
       />
+
+      {toastType === "add" && <ToastAdd message="تمت الإضافة" onClose={() => setToastType(null)} />}
+      {toastType === "delete" && <ToastDELETE message="تم الحذف" onClose={() => setToastType(null)} />}
+      {toastType === "edit" && <ToastEdit message="تم التحديث" onClose={() => setToastType(null)} />}
     </div>
   );
 }
