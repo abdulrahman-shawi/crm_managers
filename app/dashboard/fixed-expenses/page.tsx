@@ -1,65 +1,32 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { 
-  Plus, Trash2, Calendar, FileText, 
-  CreditCard, Search, X, Edit3, Save, 
-  ArrowUpRight, LayoutGrid, ArrowDownRight
+  Plus, Trash2, FileText, 
+  CreditCard, Search, X, Edit3, Save 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
+// استيراد الـ Hook (تأكد من المسار الصحيح للملف)
+import { useFixedExpenses } from "@/hooks/fixed";
 
 export default function FixedExpensesPage() {
-  const [expenses, setExpenses] = useState([
-    { id: 1, name: "إيجار المكتب الرئيسي", amount: 2500, category: "عقارات", date: "01 كل شهر" },
-    { id: 2, name: "رواتب الفريق التقني", amount: 12400, category: "موارد بشرية", date: "25 كل شهر" },
-  ]);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ name: "", amount: "", category: "إداري", date: "" });
-
-  const totalFixed = expenses.reduce((sum, item) => sum + item.amount, 0);
-
-  const getExp = async () => {
-    const res =   await axios.get("/api/dashboard/fixed-expenses")
-    if(res.status === 200){
-      setExpenses(res.data)
-      console.log(res.data)
-    }
-  }
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingId) {
-      const res = await axios.put(`/api/dashboard/fixed-expenses/${editingId}` ,{
-        title:formData.name,
-        amount: parseFloat(formData.amount)
-      })
-      if(res.status === 200){
-      setExpenses(expenses.map(item => item.id === editingId ? { ...item, ...formData, amount: parseFloat(formData.amount) } : item));
-      }
-    } else {
-      const res = await axios.post('/api/dashboard/fixed-expenses', { 
-        title: formData.name, 
-        amount: parseFloat(formData.amount), 
-        date: formData.date || "01 كل شهر" 
-      });
-      if (res.status === 201) 
-      {
-
-      setExpenses([...expenses, { id: Date.now(), ...formData, amount: parseFloat(formData.amount), date: formData.date || "01 كل شهر" }]);
-      }
-    }
-    closeModal();
-  };
-
-  useEffect(() => {
-    getExp()
-  } , [])
-  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFormData({ name: "", amount: "", category: "إداري", date: "" }); };
+  // استخدام الـ Hook واستخراج القيم والوظائف المطلوبة
+  const {
+    expenses,
+    totalFixed,
+    isModalOpen,
+    setIsModalOpen,
+    formData,
+    setFormData,
+    editingId,
+    handleSave,
+    deleteExpense,
+    closeModal,
+    openEditModal
+  } = useFixedExpenses();
 
   return (
     <div className="space-y-8" dir="rtl">
-      {/* الهيدر بنفس أسلوب AnalyticsPage */}
+      {/* الهيدر */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
            المصروفات الثابتة
@@ -67,7 +34,7 @@ export default function FixedExpensesPage() {
         <p className="text-slate-500 text-sm">إدارة وتتبع الالتزامات المالية المتكررة شهرياً</p>
       </div>
 
-      {/* بطاقة الإجمالي بتصميم StatCard المطور */}
+      {/* بطاقة الإجمالي */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex justify-between items-center">
           <div>
@@ -89,7 +56,7 @@ export default function FixedExpensesPage() {
         </div>
       </div>
 
-      {/* الجدول بنفس تنسيق وألوان الرسوم البيانية في AnalyticsPage */}
+      {/* الجدول */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
            <h3 className="font-bold text-slate-900 dark:text-white">جدول الالتزامات</h3>
@@ -124,10 +91,12 @@ export default function FixedExpensesPage() {
                   </td>
                   <td className="px-8 py-6 text-left">
                     <div className="flex justify-end gap-2">
-                        <button onClick={() => { setEditingId(item.id); setFormData({name: item.name, amount: item.amount.toString(), category: item.category, date: item.date}); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        {/* استخدام دالة الفتح للتعديل من الـ Hook */}
+                        <button onClick={() => openEditModal(item)} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                             <Edit3 size={18} />
                         </button>
-                        <button onClick={() => setExpenses(expenses.filter(i => i.id !== item.id))} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
+                        {/* استخدام دالة الحذف من الـ Hook */}
+                        <button onClick={() => deleteExpense(item.id)} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
                             <Trash2 size={18} />
                         </button>
                     </div>
@@ -139,7 +108,7 @@ export default function FixedExpensesPage() {
         </div>
       </div>
 
-      {/* المودال الداكن المتوافق */}
+      {/* المودال */}
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
