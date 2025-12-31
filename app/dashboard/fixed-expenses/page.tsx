@@ -30,7 +30,13 @@ export default function FixedExpensesPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
+      const res = await axios.put(`/api/dashboard/fixed-expenses/${editingId}` ,{
+        title:formData.name,
+        amount: parseFloat(formData.amount)
+      })
+      if(res.status === 200){
       setExpenses(expenses.map(item => item.id === editingId ? { ...item, ...formData, amount: parseFloat(formData.amount) } : item));
+      }
     } else {
       const res = await axios.post('/api/dashboard/fixed-expenses', { 
         title: formData.name, 

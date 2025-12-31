@@ -41,13 +41,6 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         { icon: FileText, label: "الفواتير", href: "/dashboard/invoices" },
       ].filter(Boolean) as MenuItem[],
     },
-    {
-      group: "النظام",
-      items: [
-        { icon: Settings, label: "الإعدادات", href: "/dashboard/settings" },
-        { icon: ShieldCheck, label: "الأمان", href: "/dashboard/security" },
-      ]
-    }
   ];
 
   return (
