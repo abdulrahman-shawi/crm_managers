@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { 
   Plus, Trash2, Calendar, FileText, 
   CreditCard, Search, X, Edit3, Save, 
@@ -10,23 +10,30 @@ import axios from "axios";
 
 export default function FixedExpensesPage() {
   const [expenses, setExpenses] = useState([
-    { id: 1, title: "إيجار المكتب الرئيسي", amount: 2500, category: "عقارات", date: "01 كل شهر" },
-    { id: 2, title: "رواتب الفريق التقني", amount: 12400, category: "موارد بشرية", date: "25 كل شهر" },
+    { id: 1, name: "إيجار المكتب الرئيسي", amount: 2500, category: "عقارات", date: "01 كل شهر" },
+    { id: 2, name: "رواتب الفريق التقني", amount: 12400, category: "موارد بشرية", date: "25 كل شهر" },
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState({ title: "", amount: "", category: "إداري", date: "" });
+  const [formData, setFormData] = useState({ name: "", amount: "", category: "إداري", date: "" });
 
   const totalFixed = expenses.reduce((sum, item) => sum + item.amount, 0);
 
+  const getExp = async () => {
+    const res =   await axios.get("/api/dashboard/fixed-expenses")
+    if(res.status === 200){
+      setExpenses(res.data)
+      console.log(res.data)
+    }
+  }
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
       setExpenses(expenses.map(item => item.id === editingId ? { ...item, ...formData, amount: parseFloat(formData.amount) } : item));
     } else {
       const res = await axios.post('/api/dashboard/fixed-expenses', { 
-        title: formData.title, 
+        title: formData.name, 
         amount: parseFloat(formData.amount), 
         date: formData.date || "01 كل شهر" 
       });
@@ -39,7 +46,10 @@ export default function FixedExpensesPage() {
     closeModal();
   };
 
-  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFormData({ title: "", amount: "", category: "إداري", date: "" }); };
+  useEffect(() => {
+    getExp()
+  } , [])
+  const closeModal = () => { setIsModalOpen(false); setEditingId(null); setFormData({ name: "", amount: "", category: "إداري", date: "" }); };
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -100,7 +110,7 @@ export default function FixedExpensesPage() {
                       <div className="p-2.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 group-hover:text-blue-600 transition-colors">
                         <FileText size={20} />
                       </div>
-                      <span className="font-bold text-slate-700 dark:text-slate-200">{item.title}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-200">{item.name}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6 text-center">
@@ -108,7 +118,7 @@ export default function FixedExpensesPage() {
                   </td>
                   <td className="px-8 py-6 text-left">
                     <div className="flex justify-end gap-2">
-                        <button onClick={() => { setEditingId(item.id); setFormData({title: item.title, amount: item.amount.toString(), category: item.category, date: item.date}); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        <button onClick={() => { setEditingId(item.id); setFormData({name: item.name, amount: item.amount.toString(), category: item.category, date: item.date}); setIsModalOpen(true); }} className="p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                             <Edit3 size={18} />
                         </button>
                         <button onClick={() => setExpenses(expenses.filter(i => i.id !== item.id))} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
@@ -135,7 +145,7 @@ export default function FixedExpensesPage() {
               <form onSubmit={handleSave} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">اسم المصروف</label>
-                  <input required value={formData.title} onChange={(e) => setFormData({...formData, title: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-700 dark:text-slate-300">المبلغ (€)</label>
