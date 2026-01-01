@@ -49,6 +49,7 @@ export async function POST(request: Request) {
 
     const blob = await put(file.name, file, {
     access: "public",
+    token: process.env.BLOB_READ_WRITE_TOKEN,
   });
     // 2. معالجة وحفظ الصورة في مجلد public/uploads
     const uploadDir = path.join(process.cwd(), "public", "uploads");
