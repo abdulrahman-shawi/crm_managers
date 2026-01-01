@@ -9,6 +9,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
+import { useInvoices } from "@/hooks/invoices";
 
 // --- الواجهات (Interfaces) ---
 interface Invoice {
@@ -26,72 +27,23 @@ interface Invoice {
 export default function InvoicesPage() {
     const { customers } = useCustomers();
     const { products } = useProductForm(() => { });
-    const [activeTab, setActiveTab] = useState("revenue");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isViewOpen, setIsViewOpen] = useState(false);
-    const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-    const [revenues, setRevenues] = useState<Invoice[]>([]);
-    const [expenses, setExpenses] = useState<Invoice[]>([]);
-    const [isLoading, setIsLoading] = useState(true); // اختياري لإظهار مؤشر تحميل
-
-    const fetchinvoices = async () => {
-        try {
-            setIsLoading(true);
-            const response = await fetch("/api/dashboard/invoices", {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                // تحويل البيانات لتطابق أسماء الحقول في بياناتك الحقيقية
-                const formattedData = data.map((inv: any) => ({
-                    id: inv.id,
-                    rawItems: inv.items, // أضف هذا السطر ليمرر المنتجات للمودال
-                    // الوصول للاسم من داخل كائن customer
-                    party: inv.customer?.name || "عميل غير معروف",
-                    // جلب اسم أول منتج من مصفوفة items
-                    category: inv.items?.[0] ? `منتج: ${inv.items[0].productId}` : "عام",
-                    amount: inv.totalAmount,
-                    date: new Date(inv.date).toLocaleDateString('ar-EG'),
-                    // تحويل الحالة والنوع للعربية لتناسب الستاين الخاص بك
-                    status: inv.status === "PENDING" ? "معلقة" : "مدفوعة",
-                    type: inv.type // سيكون قيمته "REVENUE" أو "EXPENSE"
-                }));
-
-                // فرز البيانات بناءً على القيمة القادمة EXPENSE و REVENUE
-                setRevenues(formattedData.filter((inv: any) => inv.type === "REVENUE"));
-                setExpenses(formattedData.filter((inv: any) => inv.type === "EXPENSE"));
-            }
-        } catch (error) {
-            console.error("Error:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchinvoices();
-    }, []);
-    // بيانات افتراضية
-
-    // حساب إجمالي المقبوضات (REVENUE)
-    const totalRevenues = revenues.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-
-    // حساب إجمالي المدفوعات (EXPENSE)
-    const totalExpenses = expenses.reduce((sum, inv) => sum + Number(inv.amount || 0), 0);
-
-    // حساب صافي الرصيد
-    const netBalance = totalRevenues - totalExpenses;
-
-    const getStatusStyle = (status: string) => {
-        switch (status) {
-            case "مدفوعة": return "bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20";
-            case "معلقة": return "bg-amber-50 text-amber-600 dark:bg-amber-900/20";
-            default: return "bg-slate-50 text-slate-600 dark:bg-slate-800";
-        }
-    };
+    const {
+  activeTab,
+  setActiveTab,
+  isModalOpen,
+  setIsModalOpen,
+  isViewOpen,
+  setIsViewOpen,
+  selectedInvoice,
+  setSelectedInvoice,
+  revenues,
+  expenses,
+  isLoading,
+  totalRevenues,
+  totalExpenses,
+  netBalance,
+  getStatusStyle,
+} = useInvoices();
 
     return (
         <div className="space-y-8 p-4 md:p-8" dir="rtl">

@@ -34,6 +34,7 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File;
     const name = formData.get("name") as string;
     const price = formData.get("price") as string;
+    const priceLow = formData.get("priceLow") as string;
     const stock = formData.get("stock") as string;
     const categoryId = formData.get("categoryId") as string;
 
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
         image: imageUrl, // الحقل الذي أضفناه للسكيما
         // تحويل categoryId لرقم فقط إذا كان موجوداً
         categoryId: categoryId ? parseInt(categoryId) : null,
+        priceLow:parseFloat(priceLow)
       },
       include:{category:true}
     });

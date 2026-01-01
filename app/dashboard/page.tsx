@@ -14,7 +14,7 @@ export default function Dashboard() {
   const fetchUsers = async () => {
         try {
             const res = await axios.get("/api/users");
-            setUser(res.data.users.length || 0);
+            setUser(res.data.length || 0);
         } catch (err) {
             console.error("فشل جلب البيانات", err);
         }

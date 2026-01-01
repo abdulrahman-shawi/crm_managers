@@ -9,6 +9,7 @@ export interface Product {
     image: string | null;
     categoryId: number;
     createdAt: string;
+    priceLow:number
     // إذا كان الـ API يعيد كائن القسم كاملاً في العرض
     category?: {
         id: number;
@@ -32,7 +33,8 @@ export function useProductForm(onSuccess: () => void) {
         name: "",
         categoryId: "",
         price: "",
-        stock: ""
+        stock: "",
+        priceLow:""
     };
     const [formData, setFormData] = useState(initialData);
 
@@ -89,7 +91,8 @@ export function useProductForm(onSuccess: () => void) {
             name: product.name,
             categoryId: String(product.categoryId), // تحويل الرقم لنص ليتناسب مع الـ Select
             price: String(product.price),
-            stock: String(product.stock)
+            stock: String(product.stock),
+            priceLow:String(product.priceLow)
         });
         setSelectedImage(product.image || null);
         setIsModalOpen(true);
@@ -115,6 +118,7 @@ export function useProductForm(onSuccess: () => void) {
         data.append("categoryId", formData.categoryId);
         data.append("price", formData.price);
         data.append("stock", formData.stock);
+        data.append("priceLow" , formData.priceLow)
 
         try {
             let res;

@@ -72,6 +72,14 @@ export const AddProductModal = ({ isOpen, onClose, categories , productForm }: a
                                     </div>
                                 </div>
 
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold">السعر الجملة</label>
+                                    <div className="relative">
+                                        <Euro className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <input required type="number" value={formData.priceLow} onChange={(e) => setFormData({...formData, priceLow: e.target.value})} className="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
+                                    </div>
+                                </div>
+
                                 {/* المخزون */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold">الكمية</label>
