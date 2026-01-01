@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const stock = formData.get("stock") as string;
     const categoryId = formData.get("categoryId") as string;
 
-    // 1. فحص البيانات الأساسية
+    // 1. فحص البيانات
     if (!name || !price || !file) {
       return NextResponse.json({ 
         success: false, 
@@ -47,40 +47,38 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    // 2. الرفع إلى Vercel Blob فقط
+    // ملاحظة: تأكد من إضافة BLOB_READ_WRITE_TOKEN في إعدادات Vercel
     const blob = await put(file.name, file, {
-    access: "public",
-    token: process.env.BLOB_READ_WRITE_TOKEN,
-  });
-    // 2. معالجة وحفظ الصورة في مجلد public/uploads
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
+      access: "public",
+    });
 
-    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
-    const filePath = path.join(uploadDir, fileName);
-    
-    const bytes = await file.arrayBuffer();
-    await writeFile(filePath, Buffer.from(bytes));
-    
-    const imageUrl = `/uploads/${fileName}`;
-
-    // 3. الإدخال في قاعدة البيانات (متوافق مع السكيما الخاصة بك)
+    // 3. الإدخال في قاعدة البيانات باستخدام رابط الـ Blob
     const product = await prisma.product.create({
       data: {
         name: name,
         price: parseFloat(price),
         stock: stock ? parseInt(stock) : 0,
-        image: blob.url, // الحقل الذي أضفناه للسكيما
-        // تحويل categoryId لرقم فقط إذا كان موجوداً
+        image: blob.url, // الرابط المباشر من Vercel
         categoryId: categoryId ? parseInt(categoryId) : null,
-        priceLow:parseFloat(priceLow)
+        priceLow: parseFloat(priceLow)
       },
-      include:{category:true}
+      include: { category: true }
     });
 
     return NextResponse.json({ success: true, product: product });
 
   } catch (error: any) {
     console.error("خطأ في الخادم:", error);
+    
+    // رسالة خطأ واضحة إذا كان السبب هو التوكن
+    if (error.message.includes("No token found")) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "خطأ في الإعدادات: مفتاح Vercel Blob غير موجود" 
+      }, { status: 500 });
+    }
+
     return NextResponse.json({ 
       success: false, 
       message: "فشل في حفظ المنتج: " + (error.message || "خطأ داخلي")
