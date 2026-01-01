@@ -54,7 +54,7 @@ export default function InvoicesPage() {
                 <div className="lg:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[2.5rem] text-white shadow-xl">
                     <p className="text-blue-100 text-sm font-medium">صافي الرصيد الحالي</p>
                     <h2 className="text-4xl font-black mt-2 font-sans">
-                        €{netBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        ل.س{netBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </h2>
                 </div>
 
@@ -63,7 +63,7 @@ export default function InvoicesPage() {
                     <div>
                         <p className="text-slate-500 text-sm font-medium">إجمالي المقبوضات</p>
                         <h3 className="text-2xl font-black text-emerald-600 font-sans">
-                            €{totalRevenues.toLocaleString()}
+                            ل.س{totalRevenues.toLocaleString(undefined , {minimumFractionDigits:2})}
                         </h3>
                     </div>
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl text-emerald-600">
@@ -76,7 +76,7 @@ export default function InvoicesPage() {
                     <div>
                         <p className="text-slate-500 text-sm font-medium">إجمالي المدفوعات</p>
                         <h3 className="text-2xl font-black text-red-600 font-sans">
-                            €{totalExpenses.toLocaleString()}
+                            ل.س{totalExpenses.toLocaleString(undefined , {minimumFractionDigits:2})}
                         </h3>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl text-red-600">
@@ -135,7 +135,7 @@ export default function InvoicesPage() {
                                         </span>
                                     </td>
                                     <td className={`px-8 py-5 font-black font-sans ${activeTab === "revenue" ? "text-emerald-600" : "text-red-600"}`}>
-                                        €{item.amount}
+                                        ل.س{item.amount}
                                     </td>
                                     <td className="px-8 py-5 text-left">
                                         <button
@@ -299,7 +299,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute z-[210] w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                                             {products?.filter((p: any) => p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase())).map((product: any) => (
                                                 <div key={product.id} onClick={() => updateItem(index, "productId", product.id.toString())} className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0">
-                                                    {product.name} <span className="text-blue-500 mr-2 text-xs">€{product.price}</span>
+                                                    {product.name} <span className="text-blue-500 mr-2 text-xs">ل.س{product.price}</span>
                                                 </div>
                                             ))}
                                         </motion.div>
@@ -312,7 +312,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
                             </div>
                             <div className="md:col-span-1 text-center">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">السعر</label>
-                                <div className="p-3 text-sm font-bold">€{item.price}</div>
+                                <div className="p-3 text-sm font-bold">ل.س{item.price}</div>
                             </div>
                             <div className="md:col-span-1">
                                 <label className="text-[10px] font-bold text-red-400 mb-1">الخصم</label>
@@ -322,7 +322,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">ملاحظات المنتج</label>
                                 <input type="text" value={item.note} onChange={(e) => updateItem(index, "note", e.target.value)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl outline-none text-xs shadow-sm" placeholder="إضافة ملاحظة..." />
                             </div>
-                            <div className="md:col-span-1 text-center font-black text-blue-600 italic">€{item.total}</div>
+                            <div className="md:col-span-1 text-center font-black text-blue-600 italic">ل.س{item.total}</div>
                             <div className="md:col-span-1 flex justify-center">
                                 <button onClick={() => setItems(items.filter((_, i) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
                             </div>
@@ -338,12 +338,12 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
                             <label className="text-[10px] font-bold text-red-500 uppercase px-1">خصم إضافي (كلي)</label>
                             <div className="relative">
                                 <input type="number" value={overallDiscount} onChange={(e) => setOverallDiscount(Number(e.target.value))} className="w-32 bg-red-50 dark:bg-red-900/10 p-3 rounded-2xl border border-red-100 dark:border-red-900/20 outline-none font-bold text-red-600 text-center" placeholder="0" />
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400">€</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400">ل.س</span>
                             </div>
                         </div>
                         <div className="bg-blue-50 dark:bg-blue-900/20 px-8 py-4 rounded-3xl">
                             <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">الإجمالي النهائي</p>
-                            <h3 className="text-3xl font-black font-sans text-blue-600 italic">€{grandTotal.toLocaleString()}</h3>
+                            <h3 className="text-3xl font-black font-sans text-blue-600 italic">ل.س{grandTotal.toLocaleString()}</h3>
                         </div>
                     </div>
                     <div className="flex gap-4">
@@ -414,8 +414,7 @@ function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                 <p className="text-slate-500 font-bold">التاريخ: <span className="text-slate-900">{invoice.date}</span></p>
                             </div>
                             <div className="text-left">
-                                <div className="text-2xl font-black text-slate-900">اسم شركتك</div>
-                                <p className="text-xs text-slate-400 mt-1">الرقم الضريبي: 310022334455</p>
+                                <div className="text-2xl font-black text-slate-900">قطنيات السلطان</div>
                             </div>
                         </div>
 
@@ -451,8 +450,8 @@ function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                                 {getProductName(item.productId)}
                                             </td>
                                             <td className="px-6 py-6 text-center font-bold">{item.quantity}</td>
-                                            <td className="px-6 py-6 text-center text-slate-500">€{item.unitPrice.toLocaleString()}</td>
-                                            <td className="px-6 py-6 text-left font-black italic">€{item.subTotal.toLocaleString()}</td>
+                                            <td className="px-6 py-6 text-center text-slate-500">ل.س{item.unitPrice.toLocaleString()}</td>
+                                            <td className="px-6 py-6 text-left font-black italic">ل.س{item.subTotal.toLocaleString()}</td>
                                         </tr>
                                     ))
                                 ) : (
@@ -469,7 +468,7 @@ function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
 
                                 <div className="flex justify-between text-2xl font-black text-blue-600 pt-3 border-t border-slate-200">
                                     <span>الإجمالي:</span>
-                                    <span className="italic font-sans">€{subtotal.toLocaleString()}</span>
+                                    <span className="italic font-sans">ل.س{subtotal.toLocaleString()}</span>
                                 </div>
                             </div>
                         </div>
