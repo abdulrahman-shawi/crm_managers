@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 
 export async function GET(request:NextRequest) {
    try {
@@ -46,6 +47,9 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    const blob = await put(file.name, file, {
+    access: "public",
+  });
     // 2. معالجة وحفظ الصورة في مجلد public/uploads
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
@@ -64,7 +68,7 @@ export async function POST(request: Request) {
         name: name,
         price: parseFloat(price),
         stock: stock ? parseInt(stock) : 0,
-        image: imageUrl, // الحقل الذي أضفناه للسكيما
+        image: blob.url, // الحقل الذي أضفناه للسكيما
         // تحويل categoryId لرقم فقط إذا كان موجوداً
         categoryId: categoryId ? parseInt(categoryId) : null,
         priceLow:parseFloat(priceLow)
