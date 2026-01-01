@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
-import { Role } from "@/generated/prisma/enums";
+import { Role } from "@prisma/client";
 import bcrypt from 'bcryptjs';
 
 interface BodyProps {
