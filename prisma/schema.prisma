@@ -95,6 +95,28 @@ model FixedExpense {
   createdAt DateTime @default(now()) @db.Timestamp(6)
 }
 
+model PageSeo {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  slug        String   @unique
+  title       String
+  description String
+  keywords    String?
+  ogImage     String?
+  updatedAt   DateTime @default(now()) @db.Timestamp(6)
+}
+
+model GeneralSettings {
+  id               Int      @id @default(1)
+  siteName         String   @default("متجري")
+  currency         String   @default("EUR")
+  contactEmail     String?
+  facebookUrl      String?
+  instagramUrl     String?
+  updatedAt        DateTime @default(now()) @db.Timestamp(6)
+  logoUrl          String?
+  selectedTemplate String   @default("modern")
+}
+
 enum Role {
   ADMIN
   MANAGER

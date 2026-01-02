@@ -2,7 +2,9 @@
 import { useAuth } from "@/context/AuthContext";
 import { 
   Home, BarChart2, Users, Settings, ChevronRight, ChevronLeft, 
-  Receipt, Box, FileText, PieChart, ShieldCheck, HelpCircle, LogOut 
+  Receipt, Box, FileText, PieChart, ShieldCheck, HelpCircle, LogOut, 
+  Users2,
+  Settings2
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -32,6 +34,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         { icon: Box, label: "المخزن والمنتجات", href: "/dashboard/products" },
         { icon: Users, label: "العملاء", href: "/dashboard/customers" },
         { icon: FileText, label: "المصاريف الثابتة", href: "/dashboard/fixed-expenses" },
+        { icon: Users2, label: "توصيات العملاء", href: "/dashboard/customer-recommendations" },
       ]
     },
     {
@@ -40,6 +43,12 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         user?.role === "ADMIN" ?{ icon: Users, label: "المستخدمين", href: "/dashboard/users" }: null,
         { icon: FileText, label: "الفواتير", href: "/dashboard/invoices" },
       ].filter(Boolean) as MenuItem[],
+    },
+    {
+      group: "إعدادات النظام",
+      items: [
+        { icon: Settings, label: "الإعدادات العامة", href: "/dashboard/settings" },
+      ]
     },
   ];
 
@@ -58,7 +67,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
       {/* الشعار (Logo) */}
       <div className={`p-6 border-b border-slate-100 dark:border-slate-900 flex items-center ${isCollapsed ? "justify-center" : "justify-start"}`}>
         <div className="w-10 h-10 bg-blue-600 dark:bg-blue-500 rounded-2xl shrink-0 shadow-lg shadow-blue-500/20 flex items-center justify-center text-white rotate-3">
-          <span className="font-black text-xl -rotate-3">ل</span>
+          <img src="/icons.jpg" alt="" width={200} />
         </div>
         {!isCollapsed && (
           <div className="mr-3 overflow-hidden">

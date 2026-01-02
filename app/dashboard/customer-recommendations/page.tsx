@@ -3,7 +3,7 @@ import { useState } from "react";
 import { MessageSquareQuote, Star, Plus, Quote, Trash2, User, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function TestimonialsPage() {
+export default function CustomerRecommendationsPage() {
   const [testimonials, setTestimonials] = useState([
     { id: 1, name: "محمد جاسم", role: "عميل وفيّ", text: "خدمة رائعة جداً، المنتج وصل في وقت قياسي وبجودة ممتازة!", rating: 5 },
     { id: 2, name: "سارة أحمد", role: "مصممة ديكور", text: "الأثاث المنزلي لديكم ذو جودة عالمية، سأقوم بالشراء مرة أخرى بالتأكيد.", rating: 4 },
