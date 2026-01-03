@@ -38,7 +38,9 @@ export async function POST(request: Request) {
     const priceLow = formData.get("priceLow") as string;
     const stock = formData.get("stock") as string;
     const categoryId = formData.get("categoryId") as string;
-
+    const modelNumber = formData.get("modelNumber") as string;
+    const status = formData.get("status") as string;
+    const userid = formData.get("userid") as string;
     // 1. فحص البيانات الأساسية
     if (!name || !price || !file) {
       return NextResponse.json({ 
@@ -68,8 +70,11 @@ export async function POST(request: Request) {
         stock: stock ? parseInt(stock) : 0,
         image: imageUrl, // الحقل الذي أضفناه للسكيما
         // تحويل categoryId لرقم فقط إذا كان موجوداً
-        categoryId: categoryId ? parseInt(categoryId) : null,
-        priceLow:parseFloat(priceLow)
+        categoryId: parseInt(categoryId),
+        priceLow:parseFloat(priceLow),
+        modelNumber: modelNumber || null,
+        status: status || 'available', // القيمة الافتراضية
+        userId: parseInt(userid), // الحقل الذي يربط المنتج بالمستخدم
       },
       include:{category:true}
     });

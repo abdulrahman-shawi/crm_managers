@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 
@@ -9,13 +10,17 @@ export interface Product {
     image: string | null;
     categoryId: number;
     createdAt: string;
-    priceLow:number
-    // إذا كان الـ API يعيد كائن القسم كاملاً في العرض
+    priceLow: number;
+    // الحقول الجديدة
+    modelNumber: string;
+    status: 'avilable' | 'unavilable' | 'instock';
+    userId: number;
     category?: {
         id: number;
         name: string;
     };
 }
+
 export function useProductForm(onSuccess: () => void) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
@@ -23,10 +28,12 @@ export function useProductForm(onSuccess: () => void) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    // حالة التعديل ومعرف المنتج الحالي
     const [isEditing, setIsEditing] = useState(false);
     const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
     const [currentProductId, setCurrentProductId] = useState<number | null>(null);
+    
+    // الحصول على بيانات المستخدم من السياق
+    const { user } = useAuth();
 
     const initialData = {
         id: 0,
@@ -34,20 +41,25 @@ export function useProductForm(onSuccess: () => void) {
         categoryId: "",
         price: "",
         stock: "",
-        priceLow:""
+        priceLow: "",
+        // الحقول الجديدة في الحالة الأولية
+        modelNumber: "",
+        status: "avilable",
+        userid:0 // القيمة الافتراضية
     };
+
     const [formData, setFormData] = useState(initialData);
 
     const fetchProducts = async () => {
         try {
             const res = await axios.get("/api/dashboard/products");
-            // تأكد من مسار البيانات في res.data
             setProducts(res.data.products || res.data);
+            
         } catch (error) {
             console.error("Error fetching products:", error);
         }
     };
-    // تنظيف الذاكرة للصور المعاينة
+
     useEffect(() => {
         return () => {
             if (selectedImage && selectedImage.startsWith("blob:")) {
@@ -57,13 +69,14 @@ export function useProductForm(onSuccess: () => void) {
     }, [selectedImage]);
 
     useEffect(() => {
-        fetchProducts()
-    }, [])
+        fetchProducts();
+    }, []);
 
     const showToast = (type: "add" | "delete" | "edit") => {
         setToastType(type);
         setTimeout(() => setToastType(null), 3000);
     };
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = event.target.files?.[0];
         if (selectedFile) {
@@ -82,17 +95,20 @@ export function useProductForm(onSuccess: () => void) {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
-    // دالة لتجهيز البيانات عند الرغبة في التعديل
     const clickEdit = (product: Product) => {
         setIsEditing(true);
         setCurrentProductId(product.id);
         setFormData({
             id: product.id,
             name: product.name,
-            categoryId: String(product.categoryId), // تحويل الرقم لنص ليتناسب مع الـ Select
+            categoryId: String(product.categoryId),
             price: String(product.price),
             stock: String(product.stock),
-            priceLow:String(product.priceLow)
+            priceLow: String(product.priceLow),
+            // تعبئة البيانات الجديدة عند التعديل
+            modelNumber: product.modelNumber || "",
+            status: product.status || "avilable",
+            userid:Number(user?.id)
         });
         setSelectedImage(product.image || null);
         setIsModalOpen(true);
@@ -101,54 +117,52 @@ export function useProductForm(onSuccess: () => void) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // في حالة الإضافة فقط الصورة إجبارية، أما في التعديل قد لا يغير المستخدم الصورة
         if (!isEditing && !file) {
             alert("الرجاء اختيار صورة أولاً");
-            return;
-        }
-        if (isEditing && !currentProductId) {
-            alert("معرف المنتج غير موجود للتعديل");
             return;
         }
 
         setLoading(true);
         const data = new FormData();
-        if (file) data.append("file", file); // نرسل الملف فقط إذا وُجد
+        if (file) data.append("file", file);
+        
         data.append("name", formData.name);
         data.append("categoryId", formData.categoryId);
         data.append("price", formData.price);
         data.append("stock", formData.stock);
-        data.append("priceLow" , formData.priceLow)
+        data.append("priceLow", formData.priceLow);
+        
+        // إرسال البيانات الجديدة
+        data.append("modelNumber", formData.modelNumber);
+        data.append("status", formData.status);
+        
+        // إرسال معرف المستخدم (مهم جداً للعلاقة في قاعدة البيانات)
+        if (user?.id) {
+            data.append("userid", String(user.id));
+        }
 
         try {
             let res;
             if (isEditing) {
-                console.log("Editing product with ID:", currentProductId, data);
-                // عملية التحديث (Update)
                 res = await axios.put(`/api/dashboard/products/${currentProductId}`, data);
-                
             } else {
-                // عملية الإضافة (Create)
                 res = await axios.post("/api/dashboard/products", data);
             }
 
             if (res.data.success) {
                 const newOrUpdatedProduct = res.data.product;
-
                 if (isEditing) {
-                    // حالة التعديل
                     setProducts((prev) =>
                         prev.map((prod) => prod.id === currentProductId ? newOrUpdatedProduct : prod)
                     );
                     showToast("edit");
                 } else {
-                    // حالة الإضافة: نضع المنتج الجديد في بداية أو نهاية القائمة
-                    setProducts((prev) => [...prev, newOrUpdatedProduct]);
+                    setProducts((prev) => [newOrUpdatedProduct, ...prev]);
                     showToast("add");
                 }
-
                 resetForm();
                 onSuccess();
+                setIsModalOpen(false); // إغلاق المودال عند النجاح
             }
         } catch (error: any) {
             const msg = error.response?.data?.message || "حدث خطأ في العملية";
@@ -160,18 +174,13 @@ export function useProductForm(onSuccess: () => void) {
 
     const handleDeleteProduct = async (id: number) => {
         if (!confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) return;
-
         try {
             const res = await axios.delete(`/api/dashboard/products/${id}`);
-
-            // نتحقق من res.data.success لأننا نرسلها الآن من الباك-إند
-            if (res.status === 200 || res.status === 204 || res.data.success) {
+            if (res.status === 200 || res.data.success) {
                 setProducts((prev) => prev.filter((p) => p.id !== id));
-                // لا تضع alert نجاح هنا إلا إذا أردت، لكن الكود لن يذهب للـ catch
                 showToast("delete");
             }
         } catch (error) {
-            console.error("Delete Error:", error);
             alert("❌ فشل الحذف، تأكد من الاتصال بالسيرفر");
         }
     };
