@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import {
     ArrowDownCircle, ArrowUpCircle, Plus,
     Trash2, Receipt, Save, X, Download,
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
 import { useInvoices } from "@/hooks/invoices";
+import { useAuth } from "@/context/AuthContext";
 
 // --- الواجهات (Interfaces) ---
 interface Invoice {
@@ -170,7 +171,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
     const [showDropdown, setShowDropdown] = useState<{ [key: number]: boolean }>({});
     // 1. أضف حالة (State) لإدارة حالة التحميل (Loading)
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const {user} = useAuth()
     // 2. دالة إرسال البيانات
     const handleSubmit = async () => {
         // التحقق من وجود بيانات
@@ -186,6 +187,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
             type: type, // 'revenue' أو 'expenses'
             clientName: client,
             status: status,
+            uderId:user?.id,
             items: items.map(item => ({
                 productId: item.productId,
                 name: item.name,

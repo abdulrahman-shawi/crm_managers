@@ -3,6 +3,7 @@ import { FolderPlus, Edit, Trash2, Layers, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastAdd, ToastDELETE, ToastEdit } from "@/components/system/toast";
 import { useCategories } from "@/hooks/categories";
+import { useAuth } from '../../../context/AuthContext';
 
 // 1. التعريفات (Interfaces)
 
@@ -39,6 +40,7 @@ export default function CategoriesPage2() {
     setIsOpen,
     setCurrentCat
   } = useCategories();
+  const {user} = useAuth()
 
   return (
     <div className="p-6 space-y-6" dir="rtl">
@@ -66,7 +68,7 @@ export default function CategoriesPage2() {
           </>
         ) : (
           <AnimatePresence>
-            {categories.map((cat) => (
+            {categories.filter(e => Number(e.userId) === Number(user?.id)).map((cat) => (
               <motion.div
                 key={cat.id}
                 initial={{ opacity: 0, y: 10 }}

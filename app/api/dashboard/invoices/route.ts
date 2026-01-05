@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { type, clientName, status, items, grandTotal } = body;
+        const { type, clientName, status, items, grandTotal , uderId } = body;
 
         // 1. تحويل القيم للـ Enums
         const formattedType = type === "revenue" ? "REVENUE" : "EXPENSE";
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
                 data: {
                     type: formattedType,
                     status: formattedStatus,
+                    userId:Number(uderId),
                     totalAmount: parseFloat(grandTotal),
                     customerId: customer ? customer.id : null,
                     items: {

@@ -16,11 +16,12 @@ export async function GET(request:NextRequest) {
 
 export async function POST(request:NextRequest) {
     const data = await request.json();
-    const { name , description } = data;        
+    const { name , description , userId  } = data;        
     const newCategory = await prisma.category.create({
         data: {
             name,       
-            description
+            description,
+            userId:Number(userId)
         }
     });
     return new Response(JSON.stringify(newCategory), {

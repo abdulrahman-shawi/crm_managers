@@ -1,3 +1,4 @@
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -16,6 +17,7 @@ interface CategoryData {
     name: string;
     description: string | null;
     products: Product[];
+    userId:number;
 }
 export function useCategories() {
 
@@ -24,11 +26,13 @@ export function useCategories() {
     const [isOpen, setIsOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
+    const {user} = useAuth()
     const [currentCat, setCurrentCat] = useState<CategoryData>({
         id: 0,
         name: "",
         description: "",
         products: [],
+        userId:Number(user?.id)
     });
 
     const fetchCategories = async () => {
@@ -48,7 +52,7 @@ export function useCategories() {
     }, []);
 
     const openAddModal = () => {
-        setCurrentCat({ id: 0, name: "", description: "", products: [] });
+        setCurrentCat({ id: 0, name: "", description: "", products: [] , userId:Number(user?.id) });
         setIsEditing(false);
         setIsOpen(true);
     };
@@ -67,7 +71,8 @@ export function useCategories() {
                 ));
                 const res = await axios.put(`/api/dashboard/categories/${currentCat.id}`, {
                     name: currentCat.name,
-                    description: currentCat.description
+                    description: currentCat.description,
+                    userId:Number(user?.id),
                 });
                 if (res.status === 200) {
                     setCategories(categories.map(c =>
@@ -78,13 +83,15 @@ export function useCategories() {
             } else {
                 const res = await axios.post("/api/dashboard/categories", {
                     name: currentCat.name,
-                    description: currentCat.description
+                    description: currentCat.description,
+                    userId:Number(user?.id),
                 });
                 if (res.status === 201 || res.status === 200) {
                     const newCat: CategoryData = {
                         id: res.data.id || Date.now(),
                         name: currentCat.name,
                         description: currentCat.description,
+                        userId:Number(user?.id),
                         products: []
                     };
                     setCategories([...categories, newCat]);
