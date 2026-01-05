@@ -117,10 +117,10 @@ export function useProductForm(onSuccess: () => void) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!isEditing && !file) {
-            alert("الرجاء اختيار صورة أولاً");
-            return;
-        }
+        // if (!isEditing) {
+        //     alert("الرجاء اختيار صورة أولاً");
+        //     return;
+        // }
 
         setLoading(true);
         const data = new FormData();
