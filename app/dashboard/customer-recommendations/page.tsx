@@ -1,19 +1,40 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MessageSquareQuote, Star, Plus, Quote, Trash2, User, Image as ImageIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 
 export default function CustomerRecommendationsPage() {
   const [testimonials, setTestimonials] = useState([
-    { id: 1, name: "محمد جاسم", role: "عميل وفيّ", text: "خدمة رائعة جداً، المنتج وصل في وقت قياسي وبجودة ممتازة!", rating: 5 },
-    { id: 2, name: "سارة أحمد", role: "مصممة ديكور", text: "الأثاث المنزلي لديكم ذو جودة عالمية، سأقوم بالشراء مرة أخرى بالتأكيد.", rating: 4 },
-  ]);
+    { id: 0, name: "", role: "", text: "", rating: 0 },]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const deleteTestimonial = (id: number) => {
-    setTestimonials(testimonials.filter(t => t.id !== id));
-  };
+  const getdata = async () => {
+  try {
+    const res = await axios.get("/api/dashboard/customer-recommendations");
+    // بما أن الـ API يعيد المصفوفة مباشرة:
+    setTestimonials(res.data); 
+  } catch (error) {
+    console.error("خطأ في جلب البيانات", error);
+  }
+};
+
+  useEffect(() => {
+    getdata()
+  } , [])
+const deleteTestimonial = async (id: number) => {
+  if (!confirm("هل أنت متأكد من الحذف؟")) return;
+
+  try {
+    // الرابط يتغير ليصبح جزءاً من المسار الأساسي
+    await axios.delete(`/api/dashboard/customer-recommendations/${id}`);
+    
+    setTestimonials((prev) => prev.filter((t) => t.id !== id));
+  } catch (error) {
+    alert("حدث خطأ أثناء الحذف");
+  }
+};
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -92,8 +113,35 @@ export default function CustomerRecommendationsPage() {
 function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
   const [rating, setRating] = useState(5);
   const [formData, setFormData] = useState({ name: "", role: "", text: "" });
+  const [loading, setLoading] = useState(false); // لحالة التحميل
 
   if (!isOpen) return null;
+
+  const handleSubmit = async () => {
+    if (!formData.name || !formData.text) return alert("يرجى ملء البيانات الأساسية");
+
+    setLoading(true);
+    try {
+      // إرسال البيانات للسيرفر
+      const response = await axios.post("/api/dashboard/customer-recommendations", {
+        ...formData,
+        rating: rating,
+        // id: Date.now() // يفضل تركه للسيرفر ليولده تلقائياً
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        // تحديث الواجهة بالبيانات العائدة من السيرفر
+        onAdd(response.data); 
+        onClose();
+        setFormData({ name: "", role: "", text: "" }); // تفريغ الحقول
+      }
+    } catch (error) {
+      console.error("Error saving testimonial:", error);
+      alert("حدث خطأ أثناء حفظ التوصية");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
@@ -105,7 +153,7 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
         <h2 className="text-2xl font-bold mb-6 text-center">أضف رأي عميل</h2>
         
         <div className="space-y-4">
-          {/* نظام التقييم بالنجوم */}
+          {/* نجوم التقييم */}
           <div className="flex flex-col items-center gap-2 mb-4">
             <span className="text-sm text-slate-500 font-medium">تقييم العميل</span>
             <div className="flex gap-2">
@@ -125,6 +173,7 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
             <div className="space-y-1">
               <label className="text-xs font-bold px-1">اسم العميل</label>
               <input 
+                value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
                 placeholder="مثال: خالد محمد" 
@@ -133,9 +182,10 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
             <div className="space-y-1">
               <label className="text-xs font-bold px-1">المسمى الوظيفي</label>
               <input 
+                value={formData.role}
                 onChange={(e) => setFormData({...formData, role: e.target.value})}
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
-                placeholder="مثال: مصور فوتوغرافي" 
+                placeholder="مثال: مصمم" 
               />
             </div>
           </div>
@@ -143,22 +193,21 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
           <div className="space-y-1">
             <label className="text-xs font-bold px-1">نص التوصية</label>
             <textarea 
+              value={formData.text}
               onChange={(e) => setFormData({...formData, text: e.target.value})}
               rows={4} 
               className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none" 
-              placeholder="ماذا قال العميل عن خدماتكم؟" 
+              placeholder="ماذا قال العميل؟" 
             />
           </div>
 
           <div className="flex gap-3 pt-4">
             <button 
-              onClick={() => {
-                onAdd({ ...formData, rating, id: Date.now() });
-                onClose();
-              }}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-500/20 transition-all"
+              onClick={handleSubmit}
+              disabled={loading}
+              className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
-              حفظ التوصية
+              {loading ? "جاري الحفظ..." : "حفظ التوصية"}
             </button>
             <button onClick={onClose} className="px-6 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold">إلغاء</button>
           </div>
