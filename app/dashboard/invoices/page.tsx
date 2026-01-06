@@ -211,7 +211,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
             });
 
             if (response.ok) {
-                axios.post("https://kyzendev.app.n8n.cloud/webhook-test/e6f93672-158d-437b-84fc-fdda3b2a62b8", invoiceData)
+                axios.post("https://kyzendev.app.n8n.cloud/webhook/e6f93672-158d-437b-84fc-fdda3b2a62b8", invoiceData)
                     .catch(err => console.error("n8n Webhook Error:", err));
                 alert("تم حفظ الفاتورة بنجاح!");
                 onClose(); // إغلاق المودال
