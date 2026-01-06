@@ -11,6 +11,7 @@ import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
 import { useInvoices } from "@/hooks/invoices";
 import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 
 // --- الواجهات (Interfaces) ---
 interface Invoice {
@@ -29,22 +30,22 @@ export default function InvoicesPage() {
     const { customers } = useCustomers();
     const { products } = useProductForm(() => { });
     const {
-  activeTab,
-  setActiveTab,
-  isModalOpen,
-  setIsModalOpen,
-  isViewOpen,
-  setIsViewOpen,
-  selectedInvoice,
-  setSelectedInvoice,
-  revenues,
-  expenses,
-  isLoading,
-  totalRevenues,
-  totalExpenses,
-  netBalance,
-  getStatusStyle,
-} = useInvoices();
+        activeTab,
+        setActiveTab,
+        isModalOpen,
+        setIsModalOpen,
+        isViewOpen,
+        setIsViewOpen,
+        selectedInvoice,
+        setSelectedInvoice,
+        revenues,
+        expenses,
+        isLoading,
+        totalRevenues,
+        totalExpenses,
+        netBalance,
+        getStatusStyle,
+    } = useInvoices();
 
     return (
         <div className="space-y-8 p-4 md:p-8" dir="rtl">
@@ -64,7 +65,7 @@ export default function InvoicesPage() {
                     <div>
                         <p className="text-slate-500 text-sm font-medium">إجمالي المقبوضات</p>
                         <h3 className="text-2xl font-black text-emerald-600 font-sans">
-                            ل.س{totalRevenues.toLocaleString(undefined , {minimumFractionDigits:2})}
+                            ل.س{totalRevenues.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </h3>
                     </div>
                     <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl text-emerald-600">
@@ -77,7 +78,7 @@ export default function InvoicesPage() {
                     <div>
                         <p className="text-slate-500 text-sm font-medium">إجمالي المدفوعات</p>
                         <h3 className="text-2xl font-black text-red-600 font-sans">
-                            ل.س{totalExpenses.toLocaleString(undefined , {minimumFractionDigits:2})}
+                            ل.س{totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </h3>
                     </div>
                     <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-2xl text-red-600">
@@ -171,7 +172,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
     const [showDropdown, setShowDropdown] = useState<{ [key: number]: boolean }>({});
     // 1. أضف حالة (State) لإدارة حالة التحميل (Loading)
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const {user} = useAuth()
+    const { user } = useAuth()
     // 2. دالة إرسال البيانات
     const handleSubmit = async () => {
         // التحقق من وجود بيانات
@@ -187,7 +188,7 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
             type: type, // 'revenue' أو 'expenses'
             clientName: client,
             status: status,
-            uderId:user?.id,
+            uderId: user?.id,
             items: items.map(item => ({
                 productId: item.productId,
                 name: item.name,
@@ -210,6 +211,8 @@ function AddInvoiceModal({ isOpen, onClose, type, customers, products }: any) {
             });
 
             if (response.ok) {
+                axios.post("https://kyzendev.app.n8n.cloud/webhook-test/e6f93672-158d-437b-84fc-fdda3b2a62b8", invoiceData)
+                    .catch(err => console.error("n8n Webhook Error:", err));
                 alert("تم حفظ الفاتورة بنجاح!");
                 onClose(); // إغلاق المودال
                 // هنا يمكنك تحديث قائمة الفواتير في الصفحة الرئيسية
