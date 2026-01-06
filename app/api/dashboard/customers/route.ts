@@ -3,7 +3,11 @@ import { NextRequest } from "next/server";
 
 export async function GET(request : NextRequest) {
    try{
-     const customers = await prisma.customer.findMany({});
+     const customers = await prisma.customer.findMany({
+        include:{
+            invoices:true
+        }
+     });
     return new Response(JSON.stringify(customers), {
         status: 200,
         headers: { "Content-Type": "application/json" },

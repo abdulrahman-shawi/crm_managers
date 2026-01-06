@@ -12,6 +12,7 @@ export async function GET(request: NextRequest, { params: { id } }: Props) {
     try {
         const customer = await prisma.customer.findUnique({
             where: { id: Number(id) },
+            include:{invoices:true}
         });
         return new Response(JSON.stringify(customer), {
             status: 200,
