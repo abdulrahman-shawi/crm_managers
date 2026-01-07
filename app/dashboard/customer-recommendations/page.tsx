@@ -4,37 +4,76 @@ import { MessageSquareQuote, Star, Plus, Quote, Trash2, User, Image as ImageIcon
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 
-export default function CustomerRecommendationsPage() {
-  const [testimonials, setTestimonials] = useState([
-    { id: 0, name: "", role: "", text: "", rating: 0 },]);
+interface Invoice {
+  id: string;
+  type: "REVENUE" | "EXPENSE";
+  status: string;
+  totalAmount: number;
+  date: string;
+}
 
+interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  activities: { id: number; text: string; date: string }[];
+  invoices: Invoice[];
+}
+
+interface Testimonial {
+  id: number;
+  name: string;
+  role: string;
+  text: string;
+  rating: number;
+}
+
+export default function CustomerRecommendationsPage() {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // جلب التوصيات
   const getdata = async () => {
-  try {
-    const res = await axios.get("/api/dashboard/customer-recommendations");
-    // بما أن الـ API يعيد المصفوفة مباشرة:
-    setTestimonials(res.data); 
-  } catch (error) {
-    console.error("خطأ في جلب البيانات", error);
-  }
-};
+    try {
+      const res = await axios.get("/api/dashboard/customer-recommendations");
+      setTestimonials(res.data);
+    } catch (error) {
+      console.error("خطأ في جلب التوصيات", error);
+    }
+  };
+
+  // جلب العملاء لاستخدامهم في القائمة المنسدلة
+  const getcustomer = async () => {
+    try {
+      const res = await axios.get("/api/dashboard/customers");
+      const data = Array.isArray(res.data) ? res.data : [];
+      setCustomers(data.map((c: any) => ({
+        ...c,
+        activities: Array.isArray(c.activities) ? c.activities : [],
+        invoices: Array.isArray(c.invoices) ? c.invoices : []
+      })));
+    } catch (error) {
+      console.error("خطأ في جلب العملاء", error);
+    }
+  };
 
   useEffect(() => {
-    getdata()
-  } , [])
-const deleteTestimonial = async (id: number) => {
-  if (!confirm("هل أنت متأكد من الحذف؟")) return;
+    getdata();
+    getcustomer();
+  }, []);
 
-  try {
-    // الرابط يتغير ليصبح جزءاً من المسار الأساسي
-    await axios.delete(`/api/dashboard/customer-recommendations/${id}`);
-    
-    setTestimonials((prev) => prev.filter((t) => t.id !== id));
-  } catch (error) {
-    alert("حدث خطأ أثناء الحذف");
-  }
-};
+  const deleteTestimonial = async (id: number) => {
+    if (!confirm("هل أنت متأكد من الحذف؟")) return;
+    try {
+      await axios.delete(`/api/dashboard/customer-recommendations/${id}`);
+      setTestimonials((prev) => prev.filter((t) => t.id !== id));
+    } catch (error) {
+      alert("حدث خطأ أثناء الحذف");
+    }
+  };
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -46,7 +85,7 @@ const deleteTestimonial = async (id: number) => {
           </h1>
           <p className="text-sm text-slate-500 mt-1">إدارة آراء العملاء التي تظهر في واجهة الموقع</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsModalOpen(true)}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95"
         >
@@ -87,7 +126,7 @@ const deleteTestimonial = async (id: number) => {
                     <p className="text-[11px] text-slate-500 uppercase tracking-wider">{item.role}</p>
                   </div>
                 </div>
-                <button 
+                <button
                   onClick={() => deleteTestimonial(item.id)}
                   className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
                 >
@@ -100,40 +139,39 @@ const deleteTestimonial = async (id: number) => {
       </div>
 
       {/* المودال الخاص بإضافة التوصية */}
-      <AddTestimonialModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        onAdd={(newT: any) => setTestimonials([newT, ...testimonials])}
+      <AddTestimonialModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onAdd={(newT: Testimonial) => setTestimonials([newT, ...testimonials])}
+        customers={customers}
       />
     </div>
   );
 }
 
 // مكون المودال
-function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
+function AddTestimonialModal({ isOpen, onClose, onAdd, customers }: any) {
   const [rating, setRating] = useState(5);
   const [formData, setFormData] = useState({ name: "", role: "", text: "" });
-  const [loading, setLoading] = useState(false); // لحالة التحميل
+  const [loading, setLoading] = useState(false);
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.text) return alert("يرجى ملء البيانات الأساسية");
+    if (!formData.name || !formData.text) return alert("يرجى اختيار العميل وكتابة التوصية");
 
     setLoading(true);
     try {
-      // إرسال البيانات للسيرفر
       const response = await axios.post("/api/dashboard/customer-recommendations", {
         ...formData,
         rating: rating,
-        // id: Date.now() // يفضل تركه للسيرفر ليولده تلقائياً
       });
 
       if (response.status === 201 || response.status === 200) {
-        // تحديث الواجهة بالبيانات العائدة من السيرفر
-        onAdd(response.data); 
+        onAdd(response.data);
         onClose();
-        setFormData({ name: "", role: "", text: "" }); // تفريغ الحقول
+        setFormData({ name: "", role: "", text: "" });
+        setRating(5);
       }
     } catch (error) {
       console.error("Error saving testimonial:", error);
@@ -145,21 +183,21 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
         className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 dark:border-slate-800"
         dir="rtl"
       >
         <h2 className="text-2xl font-bold mb-6 text-center">أضف رأي عميل</h2>
         
         <div className="space-y-4">
-          {/* نجوم التقييم */}
           <div className="flex flex-col items-center gap-2 mb-4">
             <span className="text-sm text-slate-500 font-medium">تقييم العميل</span>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((num) => (
-                <button 
-                  key={num} 
+                <button
+                  key={num}
                   onClick={() => setRating(num)}
                   className={`transition-transform hover:scale-125 ${num <= rating ? "text-amber-400" : "text-slate-300"}`}
                 >
@@ -169,47 +207,58 @@ function AddTestimonialModal({ isOpen, onClose, onAdd }: any) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold px-1">اسم العميل</label>
-              <input 
+              <label className="text-xs font-bold px-1">اختر العميل</label>
+              <select
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
-                placeholder="مثال: خالد محمد" 
-              />
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all appearance-none"
+              >
+                <option value="">-- اختر من القائمة --</option>
+                {customers.map((c: Customer) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs font-bold px-1">المسمى الوظيفي</label>
-              <input 
+              <input
                 value={formData.role}
-                onChange={(e) => setFormData({...formData, role: e.target.value})}
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
-                placeholder="مثال: مصمم" 
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                placeholder="مثال: مدير تنفيذي"
               />
             </div>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold px-1">نص التوصية</label>
-            <textarea 
+            <textarea
               value={formData.text}
-              onChange={(e) => setFormData({...formData, text: e.target.value})}
-              rows={4} 
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none" 
-              placeholder="ماذا قال العميل؟" 
+              onChange={(e) => setFormData({ ...formData, text: e.target.value })}
+              rows={4}
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+              placeholder="ماذا قال العميل عن خدماتكم؟"
             />
           </div>
 
           <div className="flex gap-3 pt-4">
-            <button 
+            <button
               onClick={handleSubmit}
               disabled={loading}
               className={`flex-1 bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition-all ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               {loading ? "جاري الحفظ..." : "حفظ التوصية"}
             </button>
-            <button onClick={onClose} className="px-6 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold">إلغاء</button>
+            <button
+              onClick={onClose}
+              className="px-6 bg-slate-100 dark:bg-slate-800 rounded-2xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              إلغاء
+            </button>
           </div>
         </div>
       </motion.div>
