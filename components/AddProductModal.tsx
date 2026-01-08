@@ -5,11 +5,11 @@ import { X, Package, Tag, Euro, Database, Image as ImageIcon, CheckCircle2, Load
 import axios from "axios";
 import { useProductForm } from "@/hooks/products";
 
-export const AddProductModal = ({ isOpen, onClose, categories, productForm }: any) => {
+export const AddProductModal = ({ isOpen, onClose, oncloseLow , categories, productForm , islow }: any) => {
 
     const {
         formData, setFormData, fileInputRef, selectedImage,
-        loading, handleFileChange, handleSubmit, isEditing
+        loading, handleFileChange, handleSubmit, isEditing , productslow
     } = productForm;
 
     return (
@@ -118,6 +118,96 @@ export const AddProductModal = ({ isOpen, onClose, categories, productForm }: an
                         </div>
                     </motion.div>
                 </div>
+            )}
+            {islow && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+                    {/* الخلفية المعتمة */}
+                    <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }} 
+                        onClick={onClose} 
+                        className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" 
+                    />
+
+                    <motion.div 
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }} 
+                        animate={{ opacity: 1, scale: 1, y: 0 }} 
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        className="relative w-full max-w-3xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800" 
+                        dir="rtl"
+                    >
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-6">
+                                <h2 className="text-2xl font-bold flex items-center gap-3">
+                                    <div className="p-2 bg-amber-500 rounded-lg text-white">
+                                        <Activity size={22} />
+                                    </div>
+                                    تنبيهات المخزون المنخفض
+                                    <span className="text-sm font-normal bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
+                                        {productslow.length} منتجات
+                                    </span>
+                                </h2>
+                                <button onClick={oncloseLow} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X size={20} /></button>
+                            </div>
+
+                            <div className="overflow-y-auto max-h-[60vh] pr-2 custom-scrollbar">
+                                <div className="grid gap-4">
+                                    {productslow.length > 0 ? (
+                                        productslow.map((product:any) => (
+                                            <div 
+                                                key={product.id} 
+                                                className={`flex items-center justify-between p-4 rounded-2xl border-2 transition-colors ${
+                                                    Number(product.stock) === 0 
+                                                    ? "bg-red-50 border-red-100 dark:bg-red-900/10 dark:border-red-900/30" 
+                                                    : "bg-amber-50 border-amber-100 dark:bg-amber-900/10 dark:border-amber-900/30"
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center border border-slate-100 overflow-hidden">
+                                                        {product.image ? (
+                                                            <img src={product.image} alt={product.name} className="object-contain" />
+                                                        ) : (
+                                                            <ImageIcon className="text-slate-300" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-slate-800 dark:text-white">{product.name}</h3>
+                                                        <p className="text-sm text-slate-500">{product.modelNumber}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="text-left">
+                                                    <div className={`text-lg font-black ${Number(product.stock) === 0 ? "text-red-600" : "text-amber-600"}`}>
+                                                        الكمية: {product.stock}
+                                                    </div>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase font-bold ${
+                                                        Number(product.stock) === 0 ? "bg-red-200 text-red-700" : "bg-amber-200 text-amber-700"
+                                                    }`}>
+                                                        {Number(product.stock) === 0 ? "نفد من المخزن" : "مخزون حرج"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-10 text-slate-500">
+                                            <CheckCircle2 size={48} className="mx-auto mb-3 text-green-500 opacity-20" />
+                                            <p>كل المنتجات متوفرة بشكل جيد!</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={oncloseLow}
+                                className="w-full mt-6 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 py-3 rounded-xl font-bold transition-colors"
+                            >
+                                إغلاق النافذة
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+
             )}
         </AnimatePresence>
     );

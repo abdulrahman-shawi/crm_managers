@@ -25,9 +25,11 @@ export function useProductForm(onSuccess: () => void) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
+    const [productslow, setProductslow] = useState<Product[]>([]);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [islowOpen, setIslowOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
     const [currentProductId, setCurrentProductId] = useState<number | null>(null);
@@ -59,6 +61,15 @@ export function useProductForm(onSuccess: () => void) {
             console.error("Error fetching products:", error);
         }
     };
+    const fetchProductslow = async () => {
+        try {
+            const res = await axios.get("/api/dashboard/stocklow");
+            setProductslow(res.data.products || res.data);
+            
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        }
+    };
 
     useEffect(() => {
         return () => {
@@ -70,6 +81,7 @@ export function useProductForm(onSuccess: () => void) {
 
     useEffect(() => {
         fetchProducts();
+        fetchProductslow();
     }, []);
 
     const showToast = (type: "add" | "delete" | "edit") => {
@@ -203,6 +215,10 @@ export function useProductForm(onSuccess: () => void) {
         setProducts,
         handleDeleteProduct,
         toastType,
-        setToastType
+        setToastType,
+        islowOpen,
+        setIslowOpen,
+        productslow,
+        setProductslow
     };
 }

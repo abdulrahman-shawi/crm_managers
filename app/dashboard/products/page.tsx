@@ -22,7 +22,9 @@ export default function ProductsPage() {
   // فك متغيرات الهوك
   const {
     products, clickEdit, isModalOpen,
-    setIsModalOpen, resetForm, handleDeleteProduct, toastType, setToastType
+    setIsModalOpen, resetForm, handleDeleteProduct,
+     toastType, setToastType , islowOpen , setIslowOpen ,
+      productslow , setProductslow
   } = productForm;
 
   // --- حالات البحث والترقيم ---
@@ -87,6 +89,15 @@ export default function ProductsPage() {
             className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
           >
             <Plus size={18} /> إضافة منتج
+          </button>
+          <button
+            onClick={() => {
+              resetForm();
+              setIslowOpen(true);
+            }}
+            className="w-full sm:w-auto bg-blue-600 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 active:scale-95 shrink-0"
+          >
+            <Plus size={18} /> عرض المنتجات المنخفضة
           </button>
         </div>
       </div>
@@ -218,8 +229,10 @@ export default function ProductsPage() {
       <AddProductModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+        oncloseLow= {() => setIslowOpen(false)}
         categories={categories} 
         productForm={productForm} 
+        islow = {islowOpen}
       />
 
       {toastType === "add" && <ToastAdd message="تمت إضافة المنتج بنجاح" onClose={() => setToastType(null)} />}
