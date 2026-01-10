@@ -96,7 +96,6 @@ export default function InvoicesPage() {
             </div>
 
             {/* الجدول */}
-            <div className="bg-red-400 text-yellow-400">g</div>
             <InvoicesTable invoices={invoices} />
 
             <AddInvoiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} manager={invoices} type={activeTab} customers={customers} products={products} />
