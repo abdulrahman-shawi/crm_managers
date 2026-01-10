@@ -111,7 +111,7 @@ export function useInvoices() {
       setSearchQueries({ ...searchQueries, [index]: item.name });
       setShowDropdown({ ...showDropdown, [index]: false });
     } else {
-      item[field] = value;
+      (item as any)[field] = value;
     }
 
     item.total = item.price * item.quantity - item.discount;
