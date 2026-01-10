@@ -16,16 +16,6 @@ export interface Invoice {
   rawItems?: any[];
 }
 
-interface InvoiceItem {
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-  discount: number;
-  note: string;
-  total: number;
-}
-
 /* ========= Hook ========= */
 export function useInvoices() {
   const { user } = useAuth();

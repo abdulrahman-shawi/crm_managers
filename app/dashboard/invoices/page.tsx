@@ -10,17 +10,6 @@ import { useInvoices } from "@/hooks/invoices";
 import InvoicesTable from "@/components/invoices/invoicesTable";
 import { AddInvoiceModal } from "@/components/invoices/AddInvoiceModal";
 
-// --- الواجهات (Interfaces) ---
-interface Invoice {
-    id: string;
-    party: string;
-    category: string;
-    amount: string;
-    date: string;
-    status: string;
-    client?: string;
-    vendor?: string;
-}
 
 // --- المكون الرئيسي ---
 export default function InvoicesPage() {
@@ -112,9 +101,6 @@ function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
 
     // حساب القيم المالية بناءً على بياناتك
     const subtotal = Number(invoice.amount) || 0;
-    const taxRate = 0.15; // الضريبة 15%
-    const taxAmount = subtotal * taxRate;
-    const grandTotal = subtotal + taxAmount;
 
     const getProductName = (productId: any) => {
         const product = products?.find((p: any) => p.id === productId);
