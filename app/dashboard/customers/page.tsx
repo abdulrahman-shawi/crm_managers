@@ -1,22 +1,22 @@
 "use client";
 import React from "react";
 import {
-  Users, Edit3, Trash2, Save, X,
-  History, Plus, Phone, MapPin, Mail, Receipt
+  Users, Save, X,
+  History, Plus, Phone, MapPin, Mail
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCustomers } from "@/hooks/customers";
 import { ToastAdd, ToastDELETE, ToastEdit } from "@/components/system/toast";
+import CustomerTable from "@/components/customers/customerTable";
+import AddCustomers from "@/components/customers/addcustomers";
 
 export default function CRMPage() {
+  const customerdata = useCustomers()
   const {
-    customers, isModalOpen, setIsModalOpen,
+    isModalOpen, setIsModalOpen,
     viewingCustomer, setViewingCustomer,
-    editingId, formData, setFormData,
-    openEditModal, closeModal,
-    handleSave, handleDelete,
     toastType, setToastType
-  } = useCustomers();
+  } = customerdata;
 
   return (
     <div className="p-6 space-y-6" dir="rtl">
@@ -36,106 +36,14 @@ export default function CRMPage() {
       {/* جدول العملاء */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-slate-500 text-xs font-bold uppercase">
-              <tr>
-                <th className="px-6 py-4">العميل</th>
-                <th className="px-6 py-4">رقم الهاتف</th>
-                <th className="px-6 py-4 text-left">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {customers.length > 0 ? (
-                customers.map((customer) => (
-                  <tr 
-                    key={customer.id} 
-                    className="hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer group transition-colors"
-                    onClick={() => setViewingCustomer(customer)}
-                  >
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                        {customer.name}
-                      </div>
-                      <div className="text-xs text-slate-500">{customer.email}</div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-mono text-sm">
-                      {customer.phone}
-                    </td>
-                    <td className="px-6 py-4 text-left flex justify-end gap-2">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); openEditModal(customer); }} 
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all"
-                        title="تعديل"
-                      >
-                        <Edit3 size={18} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDelete(customer.id); }} 
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
-                        title="حذف"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="px-6 py-12 text-center text-slate-400">
-                    لا يوجد عملاء مسجلين حالياً
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+          <CustomerTable customerdata={customerdata} />
         </div>
       </div>
 
       <AnimatePresence>
         {/* مودال الإضافة / التعديل */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }} 
-              animate={{ opacity: 1, scale: 1 }} 
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-3xl p-8 shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold dark:text-white">
-                  {editingId ? "تحديث بيانات العميل" : "إضافة عميل جديد"}
-                </h3>
-                <button onClick={closeModal} className="text-slate-400 hover:text-red-500">
-                  <X size={24} />
-                </button>
-              </div>
-              
-              <form onSubmit={handleSave} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 mr-2 uppercase">الاسم بالكامل</label>
-                  <input required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:border-blue-500 transition-all" placeholder="مثال: محمد أحمد" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 mr-2 uppercase">البريد الإلكتروني</label>
-                    <input required type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:border-blue-500 transition-all" placeholder="mail@example.com" />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 mr-2 uppercase">رقم الهاتف</label>
-                    <input required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:border-blue-500 transition-all" placeholder="05xxxxxxxx" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 mr-2 uppercase">العنوان بالتفصيل</label>
-                  <input required value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:border-blue-500 transition-all" placeholder="المدينة، الحي، الشارع" />
-                </div>
-
-                <button type="submit" className="w-full mt-4 bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 shadow-lg active:scale-95 transition-all flex justify-center items-center gap-2">
-                  <Save size={20} /> {editingId ? "حفظ التغييرات" : "تأكيد الإضافة"}
-                </button>
-              </form>
-            </motion.div>
-          </div>
+          <AddCustomers customerdata={customerdata} />
         )}
 
         {/* مودال تفاصيل الفواتير */}
