@@ -143,7 +143,7 @@ export default function Productslayout({current}:any) {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-500 text-sm">{product.category?.name || "بدون قسم"}</td>
-                      <td className="px-6 py-4 font-bold text-blue-600">{product.price} {current}</td>
+                      <td className="px-6 py-4 font-bold text-blue-600">{current === "SAR" ? "ل.س"  : current ==="USD"? "$" : "€"} {product.price}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-red-50 text-red-600 dark:bg-red-900/20'}`}>
                           {product.stock > 0 ? `في المخزن (${product.stock})` : "نفذت الكمية"}
