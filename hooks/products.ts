@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface Product {
     id: number;
@@ -22,6 +22,7 @@ export interface Product {
 }
 
 export function useProductForm(onSuccess: () => void) {
+    const { user } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
@@ -33,9 +34,31 @@ export function useProductForm(onSuccess: () => void) {
     const [isEditing, setIsEditing] = useState(false);
     const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
     const [currentProductId, setCurrentProductId] = useState<number | null>(null);
-    
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const filteredProducts = useMemo(() => {
+    // 1. التصفية حسب المستخدم (userId من السكيما)
+    const userOwned = products.filter(p => Number(p.userId) === Number(user?.id));
+
+    // 2. التصفية حسب الاسم أو رقم الموديل
+    if (!searchTerm.trim()) return userOwned;
+
+    const lowerTerm = searchTerm.toLowerCase();
+    return userOwned.filter(p => 
+      p.name.toLowerCase().includes(lowerTerm) || 
+      (p.modelNumber && p.modelNumber.toLowerCase().includes(lowerTerm))
+    );
+  }, [products, searchTerm, user?.id]);
+
+  // --- حسابات الترقيم ---
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+
     // الحصول على بيانات المستخدم من السياق
-    const { user } = useAuth();
+    
 
     const initialData = {
         id: 0,
@@ -47,7 +70,7 @@ export function useProductForm(onSuccess: () => void) {
         // الحقول الجديدة في الحالة الأولية
         modelNumber: "",
         status: "avilable",
-        userid:0 // القيمة الافتراضية
+        userid: 0 // القيمة الافتراضية
     };
 
     const [formData, setFormData] = useState(initialData);
@@ -56,7 +79,7 @@ export function useProductForm(onSuccess: () => void) {
         try {
             const res = await axios.get("/api/dashboard/products");
             setProducts(res.data.products || res.data);
-            
+
         } catch (error) {
             console.error("Error fetching products:", error);
         }
@@ -65,7 +88,7 @@ export function useProductForm(onSuccess: () => void) {
         try {
             const res = await axios.get("/api/dashboard/stocklow");
             setProductslow(res.data.products || res.data);
-            
+
         } catch (error) {
             console.error("Error fetching products:", error);
         }
@@ -120,7 +143,7 @@ export function useProductForm(onSuccess: () => void) {
             // تعبئة البيانات الجديدة عند التعديل
             modelNumber: product.modelNumber || "",
             status: product.status || "avilable",
-            userid:Number(user?.id)
+            userid: Number(user?.id)
         });
         setSelectedImage(product.image || null);
         setIsModalOpen(true);
@@ -137,17 +160,17 @@ export function useProductForm(onSuccess: () => void) {
         setLoading(true);
         const data = new FormData();
         if (file) data.append("file", file);
-        
+
         data.append("name", formData.name);
         data.append("categoryId", formData.categoryId);
         data.append("price", formData.price);
         data.append("stock", formData.stock);
         data.append("priceLow", formData.priceLow);
-        
+
         // إرسال البيانات الجديدة
         data.append("modelNumber", formData.modelNumber);
         data.append("status", formData.status);
-        
+
         // إرسال معرف المستخدم (مهم جداً للعلاقة في قاعدة البيانات)
         if (user?.id) {
             data.append("userid", String(user.id));
@@ -197,6 +220,9 @@ export function useProductForm(onSuccess: () => void) {
         }
     };
 
+    const handleViewProduct = (product: any) => {
+    alert(`عرض تفاصيل: ${product.name}`);
+  };
     return {
         formData,
         setFormData,
@@ -219,6 +245,18 @@ export function useProductForm(onSuccess: () => void) {
         islowOpen,
         setIslowOpen,
         productslow,
-        setProductslow
+        setProductslow,
+        searchTerm,
+        setSearchTerm,
+        currentPage,
+        setCurrentPage,
+        itemsPerPage,
+        currentItems,
+        totalPages,
+        filteredProducts,
+        indexOfFirstItem,
+        indexOfLastItem,
+        handleViewProduct
+
     };
 }
