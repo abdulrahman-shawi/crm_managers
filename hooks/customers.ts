@@ -1,4 +1,5 @@
 "use client";
+import { db } from "@/lib/db";
 import axios from "axios";
 import { useEffect, useState } from "react";
 
@@ -32,20 +33,20 @@ export function useCustomers() {
   // جلب البيانات عند تحميل الصفحة
   useEffect(() => {
     const fetchCustomers = async () => {
-      try {  
-        const res = await axios.get('/api/dashboard/customers');
-        const data = Array.isArray(res.data) ? res.data : [];
-        
-        setCustomers(data.map((c: any) => ({
-          ...c,
-          // التأكد من وجود المصفوفات لتجنب أخطاء الـ Render
-          activities: Array.isArray(c.activities) ? c.activities : [],
-          invoices: Array.isArray(c.invoices) ? c.invoices : [] 
-        })));
-      } catch (error) {
-        console.error("Failed to fetch customers:", error);
+    try {
+      const res = await axios.get('/api/dashboard/customers');
+      const data = res.data;
+      setCustomers(data);
+      // تحديث قاعدة بيانات المتصفح لتكون مطابقة للسيرفر (Cache)
+      await db.customers.clear();
+      await db.customers.bulkAdd(data.map((c: any) => ({ ...c, syncStatus: 'synced', originalId: c.id })));
+    } catch (error) {
+      if (!navigator.onLine) {
+        const offlineData = await db.customers.toArray();
+        setCustomers(offlineData as any);
       }
-    };
+    }
+  };
     fetchCustomers();
   }, []);
 
@@ -54,9 +55,51 @@ export function useCustomers() {
     setTimeout(() => setToastType(null), 3000);
   };
 
+  const handleOfflineSave = async () => {
+    const now = new Date().toLocaleString('ar-EG', { hour12: true });
+    
+    try {
+      if (editingId) {
+        // تحديث بيانات عميل موجود أصلاً في المتصفح
+        await db.customers.update(editingId, { 
+          ...formData, 
+          syncStatus: 'pending_edit' 
+        });
+      } else {
+        // إضافة عميل جديد تماماً في المتصفح
+        await db.customers.add({ 
+          ...formData, 
+          syncStatus: 'pending_add',
+          invoices: [],
+        });
+      }
+
+      // تحديث الواجهة فوراً ليشعر المستخدم أن بياناته حُفظت
+      setCustomers(prev => {
+        if (editingId) {
+          return prev.map(c => c.id === editingId ? { ...c, ...formData } : c);
+        } else {
+          return [...prev, { ...formData, id: Date.now(), invoices: [], activities: [] } as any];
+        }
+      });
+
+      showToast(editingId ? "edit" : "add");
+      closeModal();
+      alert("⚠️ أنت غير متصل بالإنترنت. تم حفظ البيانات محلياً وسيتم رفعها تلقائياً عند عودة الاتصال.");
+    } catch (err) {
+      console.error("IndexedDB Error:", err);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const now = new Date().toLocaleString('ar-EG', { hour12: true });
+
+    // التحقق من حالة الإنترنت
+    if (!navigator.onLine) {
+      await handleOfflineSave();
+      return;
+    }
 
     try {
       if (editingId) {
