@@ -1,0 +1,13 @@
+{
+  "name": "CRM System",
+  "short_name": "CRM",
+  "description": "نظام إدارة علاقات العملاء الخاص بنا",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

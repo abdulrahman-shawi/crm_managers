@@ -22,6 +22,12 @@ export const metadata: Metadata = {
     template: "%s | CRM SYSTEM" // الـ %s سيتم استبدالها بعنوان الصفحة الفرعية
   },
   description: "نظام متطور لإدارة علاقات العملاء والموظفين",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CRM System",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,6 +1,5 @@
 "use client";
 
-import { Search, UserPlus, Users2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ToastAdd, ToastDELETE, ToastEdit } from "@/components/system/toast";
 import { AddUserModal } from "@/components/AddUserModal";
@@ -8,7 +7,6 @@ import { UserRow } from "@/components/users/UserRow";
 import { useUsers } from "@/hooks/useUsers"; // استيراد الهوك
 import { UsersHeader } from "@/components/users/UsersHeader";
 import { UsersSearch } from "@/components/users/UsersSearch";
-import { Metadata } from "next";
 
 
 export default function UsersPage2() {
@@ -27,7 +25,7 @@ export default function UsersPage2() {
 
       {/* شريط البحث */}
       <UsersSearch value={searchQuery} onChange={setSearchQuery} />
-      
+
 
       {/* الجدول */}
       <div className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
@@ -67,9 +65,9 @@ export default function UsersPage2() {
         {toastType === "edit" && <ToastEdit message="تم التحديث" onClose={() => setToastType(null)} />}
       </AnimatePresence>
 
-      <AddUserModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      <AddUserModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
         onAdd={handleAddUser} // نمرر الدالة مباشرة من الـ Hook
       />
     </div>
