@@ -1,12 +1,18 @@
-const withPWA = require("@ducanh2912/next-pwa").default({
+import withPWAInit from "@ducanh2912/next-pwa";
+
+const withPWA = withPWAInit({
   dest: "public",
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
-  disable: process.env.NODE_ENV === "development", // تعطيله أثناء البرمجة لتجنب الكاش المزعج
+  swMinify: true,
+  disable: process.env.NODE_ENV === "development",
 });
 
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  // أي إعدادات أخرى لمشروع الـ CRM الخاص بك ضعها هنا
+  reactStrictMode: true,
+};
 
-export default nextConfig;
+export default withPWA(nextConfig);
