@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata , Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -28,6 +28,12 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "CRM System",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
