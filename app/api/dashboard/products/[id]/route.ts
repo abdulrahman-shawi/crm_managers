@@ -17,6 +17,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const price = formData.get("price") as string;
     const stock = formData.get("stock") as string;
     const priceLow = formData.get("priceLow") as string;
+    const modelNumber = formData.get("modelNumber") as string;
     const categoryId = formData.get("categoryId") as string;
     const file = formData.get("file") as File | null;
 
@@ -42,6 +43,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
         price: parseFloat(price),
         priceLow:parseFloat(priceLow),
         stock: parseInt(stock),
+        modelNumber:modelNumber,
         categoryId: Number(categoryId),
         ...(imagePath && { image: imagePath }), // تحديث الصورة فقط إذا تم رفع ملف جديد
       },
