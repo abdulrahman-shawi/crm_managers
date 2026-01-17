@@ -31,7 +31,7 @@ export function useInvoices() {
   const [status, setStatus] = useState<"مدفوعة" | "معلقة">("مدفوعة");
   const [overallDiscount, setOverallDiscount] = useState(0);
   const [items, setItems] = useState([
-        { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 }
+        { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 , modelNumber : "" }
     ]);
 
   const [searchQueries, setSearchQueries] = useState<Record<number, string>>({});
@@ -86,7 +86,7 @@ export function useInvoices() {
 
   /* ========= Actions ========= */
   const addNewItem = () => {
-    setItems([...items, { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 }]);
+    setItems([...items, { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 , modelNumber:"" }]);
   };
 
   const updateItem = (index: number, field: string, value: any, products: any[]) => {
@@ -97,6 +97,7 @@ export function useInvoices() {
       const product = products.find(p => p.id === Number(value));
       item.productId = value;
       item.name = product?.name || "";
+      item.modelNumber = product?.modelNumber || "";
       item.price = product?.price || 0;
       setSearchQueries({ ...searchQueries, [index]: item.name });
       setShowDropdown({ ...showDropdown, [index]: false });

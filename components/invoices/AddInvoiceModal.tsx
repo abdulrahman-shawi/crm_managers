@@ -48,7 +48,7 @@ const {
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">المنتج</label>
                                 <input
                                     type="text"
-                                    value={searchQueries[index] || item.name}
+                                    value={searchQueries[index] || item.name || item.modelNumber}
                                     placeholder="اكتب اسم المنتج..."
                                     onFocus={() => setShowDropdown({ ...showDropdown, [index]: true })}
                                     onChange={(e) => {
