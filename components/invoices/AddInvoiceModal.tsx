@@ -2,13 +2,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Receipt, Trash2, Save } from "lucide-react";
 
-export const AddInvoiceModal =({ isOpen, onClose, manager, customers, products, type  }: any) => {
-const {
+export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products, type }: any) => {
+    const {
         client, setClient, status, setStatus,
         items, setItems, addNewItem, updateItem,
         overallDiscount, setOverallDiscount,
         subTotal, grandTotal, handleSubmit, isSubmitting,
-        searchQueries, showDropdown, setShowDropdown , setSearchQueries
+        searchQueries, showDropdown, setShowDropdown, setSearchQueries
     } = manager;
 
     if (!isOpen) return null;
@@ -42,7 +42,7 @@ const {
                 </div>
 
                 <div className="space-y-4">
-                    {items.map((item : any, index : number) => (
+                    {items.map((item: any, index: number) => (
                         <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 items-center">
                             <div className="md:col-span-3 relative"> {/* تم إضافة relative هنا لضبط القائمة المنسدلة */}
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">المنتج</label>
@@ -60,9 +60,24 @@ const {
                                 <AnimatePresence>
                                     {showDropdown[index] && (
                                         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute z-[210] w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                                            {products?.filter((p: any) => p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase())).map((product: any) => (
-                                                <div key={product.id} onClick={() => updateItem(index, "productId", product.id.toString() , products)} className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0">
-                                                    {product.name} <span className="text-blue-500 mr-2 text-xs">ل.س{product.price}</span>
+                                            {products?.filter((p: any) =>
+                                                // البحث في الاسم
+                                                p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase()) ||
+                                                // البحث في رقم الموديل
+                                                (p.modelNumber && p.modelNumber.toLowerCase().includes((searchQueries[index] || "").toLowerCase()))
+                                            ).map((product: any) => (
+                                                <div
+                                                    key={product.id}
+                                                    onClick={() => updateItem(index, "productId", product.id.toString(), products)}
+                                                    className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0"
+                                                >
+                                                    <div className="flex justify-between items-center">
+                                                        <span>{product.name}</span>
+                                                        <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500">
+                                                            {product.modelNumber}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-blue-500 text-xs mt-1">ل.س {product.price}</div>
                                                 </div>
                                             ))}
                                         </motion.div>
@@ -71,7 +86,7 @@ const {
                             </div>
                             <div className="md:col-span-1">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">الكمية</label>
-                                <input type="number" value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 0 , products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-center font-bold outline-none text-sm shadow-sm" />
+                                <input type="number" value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 0, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-center font-bold outline-none text-sm shadow-sm" />
                             </div>
                             <div className="md:col-span-1 text-center">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">السعر</label>
@@ -79,15 +94,15 @@ const {
                             </div>
                             <div className="md:col-span-1">
                                 <label className="text-[10px] font-bold text-red-400 mb-1">الخصم</label>
-                                <input type="number" value={item.discount} onChange={(e) => updateItem(index, "discount", e.target.value , products)} className="w-full bg-red-50 dark:bg-red-900/10 p-3 rounded-xl text-center font-bold text-red-600 outline-none text-sm border border-red-100 dark:border-red-900/20" />
+                                <input type="number" value={item.discount} onChange={(e) => updateItem(index, "discount", e.target.value, products)} className="w-full bg-red-50 dark:bg-red-900/10 p-3 rounded-xl text-center font-bold text-red-600 outline-none text-sm border border-red-100 dark:border-red-900/20" />
                             </div>
                             <div className="md:col-span-4">
                                 <label className="text-[10px] font-bold text-slate-400 mb-1">ملاحظات المنتج</label>
-                                <input type="text" value={item.note} onChange={(e) => updateItem(index, "note", e.target.value , products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl outline-none text-xs shadow-sm" placeholder="إضافة ملاحظة..." />
+                                <input type="text" value={item.note} onChange={(e) => updateItem(index, "note", e.target.value, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl outline-none text-xs shadow-sm" placeholder="إضافة ملاحظة..." />
                             </div>
                             <div className="md:col-span-1 text-center font-black text-blue-600 italic">ل.س{item.total}</div>
                             <div className="md:col-span-1 flex justify-center">
-                                <button onClick={() => setItems(items.filter((_ : any, i : number) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
+                                <button onClick={() => setItems(items.filter((_: any, i: number) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
                             </div>
                         </div>
                     ))}
