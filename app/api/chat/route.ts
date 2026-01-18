@@ -12,7 +12,7 @@ const checkpointer = PostgresSaver.fromConnString(DB_URI);
 
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
-  apiKey: "AIzaSyBcZrBOrt0icTkQAf-BxaHi1cO4c0gBVQc"
+  apiKey: process.env.GEMINI_API_KEY
 });
 export async function POST(req: NextRequest) {
   try {
