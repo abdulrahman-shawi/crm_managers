@@ -38,16 +38,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang="ar" dir="rtl" >
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange // إضافة اختيارية لتحسين الأداء عند التبديل
-        >
            <AuthWrapper>{children}</AuthWrapper>
-        </ThemeProvider>
       </body>
     </html>
   );
