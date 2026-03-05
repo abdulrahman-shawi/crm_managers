@@ -37,19 +37,23 @@ export function useProductForm(onSuccess: () => void) {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-    const filteredProducts = useMemo(() => {
-    // 1. التصفية حسب المستخدم (userId من السكيما)
-    const userOwned = products.filter(p => Number(p.userId) === Number(user?.id));
+        const filteredProducts = useMemo(() => {
+        const hasUser = Boolean(user?.id);
 
-    // 2. التصفية حسب الاسم أو رقم الموديل
-    if (!searchTerm.trim()) return userOwned;
+        // 1. التصفية حسب المستخدم فقط إذا كان المستخدم متوفراً
+        const baseProducts = hasUser
+            ? products.filter((p) => Number(p.userId) === Number(user?.id))
+            : products;
 
-    const lowerTerm = searchTerm.toLowerCase();
-    return userOwned.filter(p => 
-      p.name.toLowerCase().includes(lowerTerm) || 
-      (p.modelNumber && p.modelNumber.toLowerCase().includes(lowerTerm))
-    );
-  }, [products, searchTerm, user?.id]);
+        // 2. التصفية حسب الاسم أو رقم الموديل
+        if (!searchTerm.trim()) return baseProducts;
+
+        const lowerTerm = searchTerm.toLowerCase();
+        return baseProducts.filter((p) => 
+            p.name.toLowerCase().includes(lowerTerm) || 
+            (p.modelNumber && p.modelNumber.toLowerCase().includes(lowerTerm))
+        );
+    }, [products, searchTerm, user?.id]);
 
   // --- حسابات الترقيم ---
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);

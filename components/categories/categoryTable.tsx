@@ -21,9 +21,12 @@ const CategoriesTable: React.FunctionComponent<ICategoriesTableProps> = (props) 
     handleDelete
   } = props.usecategories;
   const {user} = useAuth()
+  const visibleCategories = user?.id
+    ? categories.filter((e: Category) => Number(e.userId) === Number(user.id))
+    : categories;
     return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {categories.filter((e:Category) => Number(e.userId) === Number(user?.id)).map((cat:any) => (
+        {visibleCategories.map((cat:any) => (
               <motion.div
                 key={cat.id}
                 initial={{ opacity: 0, y: 10 }}

@@ -11,6 +11,20 @@ interface BodyProps {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!process.env.DATABASE_URL) {
+      return NextResponse.json(
+        { message: "إعدادات السيرفر ناقصة: DATABASE_URL غير موجود", valid: false },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return NextResponse.json(
+        { message: "إعدادات السيرفر ناقصة: JWT_SECRET غير موجود", valid: false },
+        { status: 500 }
+      );
+    }
+
     const body = (await request.json()) as BodyProps;
 
     if (!body.email || !body.password) {
@@ -44,7 +58,7 @@ const hashedPassword = await bcrypt.compare(body.password, existingUser.password
     // ✅ إنشاء JWT
     const token = jwt.sign(
       { email: existingUser.email , id: existingUser.id   , role: existingUser.role , name: existingUser.name },
-      process.env.JWT_SECRET!,
+      process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -66,7 +80,8 @@ const hashedPassword = await bcrypt.compare(body.password, existingUser.password
 
     return response;
 
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Login API Error:", error?.message || error);
     return NextResponse.json(
       { message: "خطأ في السيرفر", valid: false },
       { status: 500 }

@@ -10,12 +10,13 @@ export default async function AuthWrapper({
   children: React.ReactNode;
 }) {
   const token = cookies().get("token")?.value;
+  const jwtSecret = process.env.JWT_SECRET;
 
   let user = null;
 
-  if (token) {
+  if (token && jwtSecret) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      const decoded = jwt.verify(token, jwtSecret) as {
         email: string;
       };
 
