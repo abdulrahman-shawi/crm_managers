@@ -9,6 +9,16 @@ interface BodyProps {
   password: string;
 }
 
+const resolveJwtSecret = () => {
+  const raw =
+    process.env.JWT_SECRET ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    "";
+
+  return raw.trim();
+};
+
 export async function POST(request: NextRequest) {
   try {
     if (!process.env.DATABASE_URL) {
@@ -18,9 +28,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.JWT_SECRET) {
+    const jwtSecret = resolveJwtSecret();
+
+    if (!jwtSecret) {
       return NextResponse.json(
-        { message: "إعدادات السيرفر ناقصة: JWT_SECRET غير موجود", valid: false },
+        { message: "إعدادات السيرفر ناقصة: JWT_SECRET (أو AUTH_SECRET) غير موجود", valid: false },
         { status: 500 }
       );
     }
@@ -58,7 +70,7 @@ const hashedPassword = await bcrypt.compare(body.password, existingUser.password
     // ✅ إنشاء JWT
     const token = jwt.sign(
       { email: existingUser.email , id: existingUser.id   , role: existingUser.role , name: existingUser.name },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: "7d" }
     );
 

@@ -4,13 +4,23 @@ import { cookies } from "next/headers";
 import AuthProvider from "@/context/AuthProvider";
 import { prisma } from "./prisma";
 
+const resolveJwtSecret = () => {
+  const raw =
+    process.env.JWT_SECRET ??
+    process.env.AUTH_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    "";
+
+  return raw.trim();
+};
+
 export default async function AuthWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const token = cookies().get("token")?.value;
-  const jwtSecret = process.env.JWT_SECRET;
+  const jwtSecret = resolveJwtSecret();
 
   let user = null;
 
