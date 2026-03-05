@@ -143,11 +143,8 @@ export async function POST(req: NextRequest) {
 - استخرج جميع الفواتير ضمن الشهر المحدد من الجدول "Invoice".
 - لكل فاتورة احصل على:
   - id
-  - discount (خصم الفاتورة إن وُجد)
   - total أو subtotal (إن وُجد)
 - خزّن معرفات الفواتير.
-
-⚠️ إذا لم يكن هناك عمود discount → اعتبر الخصم = 0.
 
 ---
 
