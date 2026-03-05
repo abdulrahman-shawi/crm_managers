@@ -90,6 +90,20 @@ const extractTextContent = (content: unknown): string => {
   return "";
 };
 
+const parseRetrySeconds = (errorMessage: string): number | null => {
+  const directSecondsMatch = errorMessage.match(/retry in\s+(\d+(?:\.\d+)?)s?/i);
+  if (directSecondsMatch?.[1]) {
+    return Math.ceil(Number(directSecondsMatch[1]));
+  }
+
+  const delayMatch = errorMessage.match(/"retryDelay"\s*:\s*"(\d+)s"/i);
+  if (delayMatch?.[1]) {
+    return Number(delayMatch[1]);
+  }
+
+  return null;
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { message, sessionId } = await req.json();
@@ -241,7 +255,31 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error("Agent Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const errorMessage = String(error?.message ?? "Unknown error");
+    console.error("Agent Error:", errorMessage);
+
+    const isQuotaError =
+      errorMessage.includes("429") ||
+      errorMessage.toLowerCase().includes("quota exceeded") ||
+      errorMessage.toLowerCase().includes("too many requests");
+
+    if (isQuotaError) {
+      const retryAfterSeconds = parseRetrySeconds(errorMessage);
+      const retryMessage =
+        retryAfterSeconds && retryAfterSeconds > 0
+          ? `تم تجاوز حد استخدام Gemini مؤقتًا. حاول مرة أخرى بعد ${retryAfterSeconds} ثانية.`
+          : "تم تجاوز حد استخدام Gemini مؤقتًا. حاول مرة أخرى بعد دقيقة تقريبًا.";
+
+      return NextResponse.json(
+        {
+          error: retryMessage,
+          code: "GEMINI_QUOTA_EXCEEDED",
+          retryAfterSeconds: retryAfterSeconds ?? 60,
+        },
+        { status: 429 }
+      );
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
