@@ -45,6 +45,45 @@ const sqlReadOnlyTool = new DynamicTool({
   },
 });
 
+const extractTextContent = (content: unknown): string => {
+  if (typeof content === "string") {
+    return content.trim();
+  }
+
+  if (Array.isArray(content)) {
+    const textParts = content
+      .map((item: any) => {
+        if (typeof item === "string") {
+          return item;
+        }
+
+        if (item && typeof item === "object") {
+          if (typeof item.text === "string") {
+            return item.text;
+          }
+
+          if (typeof item.content === "string") {
+            return item.content;
+          }
+        }
+
+        return "";
+      })
+      .filter((part) => part && part.trim().length > 0);
+
+    return textParts.join("\n").trim();
+  }
+
+  if (content && typeof content === "object") {
+    const maybeText = (content as any).text;
+    if (typeof maybeText === "string") {
+      return maybeText.trim();
+    }
+  }
+
+  return "";
+};
+
 export async function POST(req: NextRequest) {
   try {
     const { message, sessionId } = await req.json();
@@ -185,10 +224,11 @@ export async function POST(req: NextRequest) {
     );
 
     // 5. الحصول على آخر رسالة من الوكيل
-    const lastMessage = result.messages[result.messages.length - 1];
+    const lastMessage = result.messages?.[result.messages.length - 1];
+    const output = extractTextContent(lastMessage?.content);
 
     return NextResponse.json({ 
-        output: lastMessage.content 
+      output: output || "تعذر استخراج رد نصي من النموذج. حاول إعادة صياغة السؤال."
     });
 
   } catch (error: any) {
