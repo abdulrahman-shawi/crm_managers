@@ -43,7 +43,7 @@ const sqlReadOnlyTool = new DynamicTool({
       const errorMessage = String(error?.message ?? "Unknown SQL error");
 
       if (errorMessage.includes("does not exist")) {
-        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, table names are case-sensitive and often require double quotes. Try: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer".`;
+        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, table names are case-sensitive and often require double quotes. Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". For "Invoice", use columns like "date" and "createdAt" (not created_at).`;
       }
 
       return `SQL error: ${errorMessage}`;
@@ -144,6 +144,7 @@ export async function POST(req: NextRequest) {
 - لكل فاتورة احصل على: جميع المعلومات المتعلقة بها، خصوصاً:
   - id
   - date
+  - createdAt
   - totalAmount (المبلغ الإجمالي قبل الخصم)
 
 ---
@@ -154,8 +155,9 @@ export async function POST(req: NextRequest) {
   - invoiceId (لربطه بالفاتورة)
   - productId
   - quantity
-  - price (سعر الوحدة قبل الخصم)
-  - itemDiscount (خصم المنتج، إذا كان موجوداً، وإلا اعتبره 0)
+  - unitPrice (سعر الوحدة قبل الخصم)
+  - discount (خصم المنتج)
+  - subTotal
 
 ⚠️ إذا لم يوجد خصم على المنتج → اعتبره 0.
 
@@ -171,10 +173,10 @@ export async function POST(req: NextRequest) {
 5️⃣ منطق الحساب المحاسبي الصحيح:
 
 أ) سعر البيع الفعلي للمنتج:
-(price - itemDiscount) × quantity
+(unitPrice - discount) × quantity
 
-ب) توزيع خصم الفاتورة:
-- وزّع خصم الفاتورة بالتناسب على عناصرها (حسب قيمة كل عنصر).
+ب) لا تفترض وجود خصم على مستوى الفاتورة:
+- إذا لم يوجد عمود خصم في "Invoice"، استخدم خصم العناصر من "InvoiceItem.discount" فقط.
 
 ج) الربح لكل عنصر:
 (سعر البيع الفعلي بعد الخصومات - priceLow × quantity)
