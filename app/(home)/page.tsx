@@ -15,7 +15,7 @@ const Hero = () => {
   const handleCheckboxChange = (size:any) => {
     if (selectedSizes.includes(size)) {
       // إذا كان المقاس موجوداً، نقوم بإزالته
-      setSelectedSizes(selectedSizes?.filter(s => s !== size));
+      setSelectedSizes(selectedSizes?.filter((s:any) => s !== size));
     } else {
       // إذا لم يكن موجوداً، نقوم بإضافته
       setSelectedSizes([...selectedSizes, size]);

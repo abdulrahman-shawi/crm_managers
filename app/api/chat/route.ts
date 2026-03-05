@@ -1,23 +1,62 @@
-// أو الموديل الذي تفضله
 import { PostgresSaver } from "@langchain/langgraph-checkpoint-postgres";
 import { NextRequest, NextResponse } from "next/server";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { DynamicTool } from "@langchain/core/tools";
 import { createAgent } from "langchain";
+import { Pool } from "pg";
 
-// ملاحظة: تأكد من أن DATABASE_URL صحيح
-const DB_URI = "postgresql://neondb_owner:npg_dHiqULQ0rnz5@ep-restless-mode-a8ga6983-pooler.eastus2.azure.neon.tech/neondb?sslmode=require&channel_binding=require";
+const databaseUrl = process.env.DATABASE_URL;
+const geminiApiKey = process.env.GEMINI_API_KEY;
 
-// إنشاء الحافظ (Checkpointer) خارج نطاق الـ POST لضمان كفاءة الأداء
-const checkpointer = PostgresSaver.fromConnString(DB_URI);
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+if (!geminiApiKey) {
+  throw new Error("GEMINI_API_KEY is not set");
+}
+
+const checkpointer = PostgresSaver.fromConnString(databaseUrl);
 
 const model = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash-lite",
-  apiKey: process.env.GEMINI_API_KEY
+  apiKey: geminiApiKey,
 });
+
+const pool = new Pool({ connectionString: databaseUrl });
+
+const sqlReadOnlyTool = new DynamicTool({
+  name: "query_crm_database",
+  description:
+    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH.",
+  func: async (query: string) => {
+    const normalized = query.trim().toLowerCase();
+
+    if (!(normalized.startsWith("select") || normalized.startsWith("with"))) {
+      return "Only read-only SELECT/WITH queries are allowed.";
+    }
+
+    try {
+      const result = await pool.query(query);
+      return JSON.stringify(result.rows.slice(0, 200));
+    } catch (error: any) {
+      return `SQL error: ${error.message}`;
+    }
+  },
+});
+
 export async function POST(req: NextRequest) {
   try {
-    
-    const { message } = await req.json();
+    const { message, sessionId } = await req.json();
+
+    if (!message || typeof message !== "string") {
+      return NextResponse.json({ error: "message is required" }, { status: 400 });
+    }
+
+    const threadId =
+      typeof sessionId === "string" && sessionId.trim().length > 0
+        ? sessionId
+        : "default_session";
 
     // 1. إعداد جداول الحفظ (ضروري جداً في المرة الأولى)
     await checkpointer.setup();
@@ -25,8 +64,8 @@ export async function POST(req: NextRequest) {
     // ملاحظة: الأدوات (tools) يجب أن تحتوي على أدوات SQL التي سنضيفها لاحقاً
     const agent = createAgent({
       model: model,
-      tools: [], // أضف أدوات SQL هنا لاحقاً للوصول لبيانات CRM
-     checkpointer,
+      tools: [sqlReadOnlyTool],
+      checkpointer,
       systemPrompt: `أنت مساعد ذكاء اصطناعي متخصص في تحليل بيانات المبيعات من قاعدة بيانات PostgreSQL داخل نظام CRM.
 
 ⚠️ قواعد إلزامية:
@@ -138,7 +177,7 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. التشغيل مع تحديد thread_id لضمان تذكر المحادثة
-    const config = { configurable: { thread_id: "user_session_1" } };
+    const config = { configurable: { thread_id: threadId } };
     
     const result = await agent.invoke(
       { messages: [{ role: "user", content: message }] },

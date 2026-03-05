@@ -24,9 +24,41 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
+## LangChain + Database Setup
+
+This project already includes LangChain packages and a chat endpoint at `app/api/chat/route.ts`.
+
+### 1) Required environment variables
+
+In `.env` make sure you have:
+
+```env
+DATABASE_URL="postgresql://..."
+GEMINI_API_KEY="..."
+```
+
+### 2) Run the app
+
+```bash
+npm run dev
+```
+
+### 3) Test chat endpoint
+
+Send a POST request to `/api/chat`:
+
+```bash
+curl -X POST http://localhost:3000/api/chat \
+	-H "Content-Type: application/json" \
+	-d '{"message":"احسب إجمالي الفواتير هذا الشهر","sessionId":"user-1"}'
+```
+
+### Notes
+
+- The endpoint now uses `DATABASE_URL` from environment variables (no hardcoded DB URI).
+- LangChain agent has a read-only SQL tool (`SELECT` / `WITH` only) to query CRM tables.
+- Conversation memory is stored using Postgres checkpointer and is separated per `sessionId`.
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
 ## Deploy on Vercel
