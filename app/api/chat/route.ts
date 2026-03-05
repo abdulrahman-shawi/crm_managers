@@ -28,7 +28,7 @@ const pool = new Pool({ connectionString: databaseUrl });
 const sqlReadOnlyTool = new DynamicTool({
   name: "query_crm_database",
   description:
-    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH.",
+    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH. Important: use Prisma table names with double quotes like \"Invoice\", \"InvoiceItem\", \"Product\", \"FixedExpense\".",
   func: async (query: string) => {
     const normalized = query.trim().toLowerCase();
 
@@ -40,7 +40,13 @@ const sqlReadOnlyTool = new DynamicTool({
       const result = await pool.query(query);
       return JSON.stringify(result.rows.slice(0, 200));
     } catch (error: any) {
-      return `SQL error: ${error.message}`;
+      const errorMessage = String(error?.message ?? "Unknown SQL error");
+
+      if (errorMessage.includes("does not exist")) {
+        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, table names are case-sensitive and often require double quotes. Try: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer".`;
+      }
+
+      return `SQL error: ${errorMessage}`;
     }
   },
 });
@@ -112,6 +118,8 @@ export async function POST(req: NextRequest) {
 - استخدم فقط الأدوات المتاحة لك (Postgres Tools).
 - أي عملية حسابية يجب أن تعتمد على بيانات فعلية من الجداول.
 - لا تفترض وجود خصومات إلا إذا كانت الأعمدة موجودة في الجداول.
+- استخدم أسماء الجداول كما هي في PostgreSQL مع علامات تنصيص مزدوجة عند الحاجة.
+- أسماء الجداول الأساسية في هذا النظام: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer".
 
 🎯 الهدف:
 حساب أرباح شهر يحدده المستخدم بدقة محاسبية، مع الأخذ بالحسبان:
@@ -132,7 +140,7 @@ export async function POST(req: NextRequest) {
 ---
 
 2️⃣ جدول Invoice:
-- استخرج جميع الفواتير ضمن الشهر المحدد.
+- استخرج جميع الفواتير ضمن الشهر المحدد من الجدول "Invoice".
 - لكل فاتورة احصل على:
   - id
   - discount (خصم الفاتورة إن وُجد)
@@ -144,7 +152,7 @@ export async function POST(req: NextRequest) {
 ---
 
 3️⃣ جدول InvoiceItem:
-- استخرج جميع العناصر المرتبطة بالفواتير.
+- استخرج جميع العناصر المرتبطة بالفواتير من الجدول "InvoiceItem".
 - لكل عنصر احصل على:
   - productId
   - quantity
@@ -156,7 +164,7 @@ export async function POST(req: NextRequest) {
 ---
 
 4️⃣ جدول Product:
-- لكل productId مستخدم:
+- لكل productId مستخدم من الجدول "Product":
   - احصل على priceLow (سعر الجملة)
   - name
 
@@ -184,7 +192,7 @@ export async function POST(req: NextRequest) {
 
 7️⃣ المصاريف الثابتة (اختياري):
 - إذا وافق المستخدم:
-  - استخرج المصاريف من جدول FixedExpense لنفس الشهر
+  - استخرج المصاريف من الجدول "FixedExpense" لنفس الشهر
   - احسب مجموعها
   - صافي الربح = الربح قبل المصاريف - المصاريف الثابتة
 
