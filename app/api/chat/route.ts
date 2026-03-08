@@ -25,6 +25,38 @@ const model = new ChatGoogleGenerativeAI({
 
 const pool = new Pool({ connectionString: databaseUrl });
 
+const PRISMA_CAMEL_CASE_COLUMNS: Record<string, string> = {
+  invoiceid: "invoiceId",
+  productid: "productId",
+  unitprice: "unitPrice",
+  subtotal: "subTotal",
+  totalamount: "totalAmount",
+  pricelow: "priceLow",
+  createdat: "createdAt",
+};
+
+const normalizeSqlForPrismaIdentifiers = (query: string): string => {
+  let nextQuery = query;
+
+  nextQuery = nextQuery.replace(
+    /\b([a-zA-Z_][a-zA-Z0-9_]*)\.(invoiceid|invoiceId|productid|productId|unitprice|unitPrice|subtotal|subTotal|totalamount|totalAmount|pricelow|priceLow|createdat|createdAt)\b/g,
+    (_full, alias: string, column: string) => {
+      const normalized = PRISMA_CAMEL_CASE_COLUMNS[column.toLowerCase()] ?? column;
+      return `${alias}."${normalized}"`;
+    }
+  );
+
+  nextQuery = nextQuery.replace(
+    /(?<![".\w])(invoiceid|invoiceId|productid|productId|unitprice|unitPrice|subtotal|subTotal|totalamount|totalAmount|pricelow|priceLow|createdat|createdAt)(?!["\w])/g,
+    (column: string) => {
+      const normalized = PRISMA_CAMEL_CASE_COLUMNS[column.toLowerCase()] ?? column;
+      return `"${normalized}"`;
+    }
+  );
+
+  return nextQuery;
+};
+
 const sqlReadOnlyTool = new DynamicTool({
   name: "query_crm_database",
   description:
@@ -37,10 +69,30 @@ const sqlReadOnlyTool = new DynamicTool({
     }
 
     try {
-      const result = await pool.query(query);
+      const normalizedQuery = normalizeSqlForPrismaIdentifiers(query);
+      const result = await pool.query(normalizedQuery);
       return JSON.stringify(result.rows.slice(0, 200));
     } catch (error: any) {
       const errorMessage = String(error?.message ?? "Unknown SQL error");
+
+      const missingColumnMatch = errorMessage.match(/column\s+([a-zA-Z0-9_."]+)\s+does not exist/i);
+      const missingColumnRaw = missingColumnMatch?.[1]?.replaceAll('"', "") ?? "";
+      const missingColumnName = missingColumnRaw.includes(".")
+        ? missingColumnRaw.split(".").pop() ?? ""
+        : missingColumnRaw;
+
+      if (missingColumnName) {
+        const correctedColumn = PRISMA_CAMEL_CASE_COLUMNS[missingColumnName.toLowerCase()];
+
+        if (correctedColumn) {
+          try {
+            const correctedQuery = normalizeSqlForPrismaIdentifiers(query);
+            const retriedResult = await pool.query(correctedQuery);
+            return JSON.stringify(retriedResult.rows.slice(0, 200));
+          } catch {
+          }
+        }
+      }
 
       if (errorMessage.includes("does not exist")) {
         return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, quote table and camelCase column names with double quotes. Example join: FROM "InvoiceItem" ii JOIN "Invoice" i ON ii."invoiceId" = i."id". Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". Common columns: "invoiceId", "productId", "unitPrice", "discount", "subTotal", "totalAmount", "priceLow", "createdAt", "date".`;
