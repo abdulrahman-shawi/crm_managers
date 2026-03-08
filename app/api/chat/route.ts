@@ -158,6 +158,21 @@ const extractBestTextResponse = (messages: any[] | undefined): string => {
   return "";
 };
 
+const looksLikeRawSqlDump = (text: string): boolean => {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return false;
+  }
+
+  const startsLikeJson = trimmed.startsWith("[") || trimmed.startsWith("{");
+  const containsSqlRowKeys =
+    /"invoiceId"|"productId"|"unitPrice"|"subTotal"|"totalAmount"|"createdAt"/i.test(
+      trimmed
+    );
+
+  return startsLikeJson && containsSqlRowKeys;
+};
+
 const parseRetrySeconds = (errorMessage: string): number | null => {
   const directSecondsMatch = errorMessage.match(/retry in\s+(\d+(?:\.\d+)?)s?/i);
   if (directSecondsMatch?.[1]) {
@@ -317,7 +332,30 @@ export async function POST(req: NextRequest) {
     );
 
     // 5. الحصول على أفضل رسالة نصية من الوكيل
-    const output = extractBestTextResponse(result.messages);
+    let output = extractBestTextResponse(result.messages);
+
+    if (looksLikeRawSqlDump(output)) {
+      const recoveryPrompt = `الرد السابق كان عبارة عن JSON خام من قاعدة البيانات، وهذا غير مقبول للمستخدم النهائي.
+
+أعد الإجابة الآن كتقرير محاسبي عربي مفصل وواضح بدون أي JSON أو SQL خام.
+
+التزم بالنقاط التالية:
+- اعرض: إجمالي المبيعات بعد الخصومات، إجمالي تكلفة البضائع، الربح قبل المصاريف.
+- إذا اختار المستخدم عدم احتساب المصاريف الثابتة، اذكر ذلك صراحة.
+- أضف تفصيلًا لكل منتج (الاسم، الكمية، إجمالي الخصم، الربح).
+- إذا البيانات غير كافية، قم بجلب المطلوب عبر الأداة ثم أعطِ النتيجة النهائية مباشرة.
+- لا تطلب من المستخدم أسماء أعمدة ولا تفاصيل تقنية.`;
+
+      const recoveredResult = await agent.invoke(
+        { messages: [{ role: "user", content: recoveryPrompt }] },
+        config
+      );
+
+      const recoveredOutput = extractBestTextResponse(recoveredResult.messages);
+      if (recoveredOutput) {
+        output = recoveredOutput;
+      }
+    }
 
     return NextResponse.json({ 
       output: output || "تعذر استخراج رد نصي من النموذج. حاول إعادة صياغة السؤال."
