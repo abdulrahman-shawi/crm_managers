@@ -1,12 +1,11 @@
 "use client";
 import {
-    ArrowDownCircle, ArrowUpCircle, Plus,
-    X, ArrowUpRight, ArrowDownLeft, Printer
+    ArrowDownCircle, ArrowUpCircle, Plus
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
 import { useInvoices } from "@/hooks/invoices";
+import type { InvoiceDateFilter } from "@/hooks/invoices";
 import InvoicesTable from "@/components/invoices/invoicesTable";
 import { AddInvoiceModal } from "@/components/invoices/AddInvoiceModal";
 import { ViewInvoiceModal } from "@/components/invoices/ViewInvoiceModal";
@@ -29,6 +28,12 @@ export default function InvoicesDashboard() {
         totalRevenues,
         totalExpenses,
         netBalance,
+        dateFilter,
+        customFrom,
+        customTo,
+        setDateFilter,
+        setCustomFrom,
+        setCustomTo,
     } = invoices;
 
     return (
@@ -46,9 +51,40 @@ export default function InvoicesDashboard() {
                         <ArrowUpCircle size={18} /> مدفوعات
                     </button>
                 </div>
-                <button onClick={() => setIsModalOpen(true)} className={`w-full md:w-auto px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-white shadow-lg transition-transform active:scale-95 ${activeTab === "revenue" ? "bg-emerald-600 shadow-emerald-500/20" : "bg-red-600 shadow-red-500/20"}`}>
-                    <Plus size={20} /> إضافة {activeTab === "revenue" ? "مقبوضات" : "مدفوعات"}
-                </button>
+                <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
+                    <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value as InvoiceDateFilter)}
+                        className="px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold"
+                    >
+                        <option value="this_month">هذا الشهر</option>
+                        <option value="last_month">الشهر الماضي</option>
+                        <option value="last_7_days">آخر 7 أيام</option>
+                        <option value="today">اليوم</option>
+                        <option value="custom">مخصص</option>
+                    </select>
+
+                    {dateFilter === "custom" && (
+                        <>
+                            <input
+                                type="date"
+                                value={customFrom}
+                                onChange={(e) => setCustomFrom(e.target.value)}
+                                className="px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold"
+                            />
+                            <input
+                                type="date"
+                                value={customTo}
+                                onChange={(e) => setCustomTo(e.target.value)}
+                                className="px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold"
+                            />
+                        </>
+                    )}
+
+                    <button onClick={() => setIsModalOpen(true)} className={`w-full md:w-auto px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-white shadow-lg transition-transform active:scale-95 ${activeTab === "revenue" ? "bg-emerald-600 shadow-emerald-500/20" : "bg-red-600 shadow-red-500/20"}`}>
+                        <Plus size={20} /> إضافة {activeTab === "revenue" ? "مقبوضات" : "مدفوعات"}
+                    </button>
+                </div>
             </div>
 
             {/* الجدول */}

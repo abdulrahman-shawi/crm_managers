@@ -16,6 +16,62 @@ export interface Invoice {
   rawItems?: any[];
 }
 
+export type InvoiceDateFilter = "this_month" | "last_month" | "last_7_days" | "today" | "custom";
+
+interface DateRange {
+  from: string;
+  to: string;
+}
+
+const toDateOnly = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getDateRangeByFilter = (
+  filter: InvoiceDateFilter,
+  customFrom: string,
+  customTo: string
+): DateRange => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (filter === "today") {
+    const value = toDateOnly(today);
+    return { from: value, to: value };
+  }
+
+  if (filter === "last_7_days") {
+    const fromDate = new Date(today);
+    fromDate.setDate(fromDate.getDate() - 6);
+    return { from: toDateOnly(fromDate), to: toDateOnly(today) };
+  }
+
+  if (filter === "last_month") {
+    const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const firstOfLastMonth = new Date(firstOfThisMonth);
+    firstOfLastMonth.setMonth(firstOfLastMonth.getMonth() - 1);
+    const lastOfLastMonth = new Date(firstOfThisMonth);
+    lastOfLastMonth.setDate(0);
+
+    return { from: toDateOnly(firstOfLastMonth), to: toDateOnly(lastOfLastMonth) };
+  }
+
+  if (filter === "custom") {
+    if (customFrom && customTo) {
+      return { from: customFrom, to: customTo };
+    }
+
+    const fallbackFrom = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { from: toDateOnly(fallbackFrom), to: toDateOnly(today) };
+  }
+
+  const firstOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  return { from: toDateOnly(firstOfMonth), to: toDateOnly(today) };
+};
+
 /* ========= Hook ========= */
 export function useInvoices() {
   const { user } = useAuth();
@@ -42,12 +98,21 @@ export function useInvoices() {
   const [revenues, setRevenues] = useState<Invoice[]>([]);
   const [expenses, setExpenses] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState<InvoiceDateFilter>("this_month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   /* ========= Fetch Invoices ========= */
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      const res = await fetch("/api/dashboard/invoices");
+      const range = getDateRangeByFilter(dateFilter, customFrom, customTo);
+      const params = new URLSearchParams({
+        from: range.from,
+        to: range.to,
+      });
+
+      const res = await fetch(`/api/dashboard/invoices?${params.toString()}`);
       if (!res.ok) throw new Error("Fetch failed");
 
       const data = await res.json();
@@ -74,7 +139,7 @@ export function useInvoices() {
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [dateFilter, customFrom, customTo]);
 
   /* ========= Calculations ========= */
   const subTotal = items.reduce((sum, i) => sum + i.total, 0);
@@ -169,12 +234,18 @@ export function useInvoices() {
     totalRevenues,
     totalExpenses,
     netBalance,
+    dateFilter,
+    customFrom,
+    customTo,
     isSubmitting,
     // ADD THESE LINES BELOW:
     searchQueries,
     setSearchQueries,
     showDropdown,
     setShowDropdown,
+    setDateFilter,
+    setCustomFrom,
+    setCustomTo,
 
     setActiveTab,
     setIsModalOpen,

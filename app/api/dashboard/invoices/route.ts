@@ -1,10 +1,35 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { Filter } from 'lucide-react';
 
 export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const fromParam = searchParams.get("from");
+        const toParam = searchParams.get("to");
+
+        const now = new Date();
+        const defaultFrom = new Date(now.getFullYear(), now.getMonth(), 1);
+        const defaultTo = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+        const fromDate = fromParam ? new Date(fromParam) : defaultFrom;
+        const toDateSource = toParam ? new Date(toParam) : defaultTo;
+        const toDate = new Date(toDateSource);
+        toDate.setHours(23, 59, 59, 999);
+
+        if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+            return NextResponse.json(
+                { error: "صيغة التاريخ غير صحيحة" },
+                { status: 400 }
+            );
+        }
+
         const invoices = await prisma.invoice.findMany({
+            where: {
+                date: {
+                    gte: fromDate,
+                    lte: toDate,
+                },
+            },
             include: {
                 customer: true,
                 items: true,
