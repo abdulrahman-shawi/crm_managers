@@ -173,6 +173,25 @@ const looksLikeRawSqlDump = (text: string): boolean => {
   return startsLikeJson && containsSqlRowKeys;
 };
 
+const looksUnstructuredOrTooLong = (text: string): boolean => {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return true;
+  }
+
+  const hasMainSections =
+    trimmed.includes("📅 **الشهر") &&
+    trimmed.includes("💰 **إجمالي المبيعات") &&
+    trimmed.includes("📦 **إجمالي تكلفة البضائع") &&
+    trimmed.includes("📈 **الربح قبل المصاريف");
+
+  const productMentions = (trimmed.match(/Product ID/gi) ?? []).length;
+  const veryLong = trimmed.length > 7000;
+  const tooManyProductLines = productMentions > 25;
+
+  return !hasMainSections || veryLong || tooManyProductLines;
+};
+
 const parseRetrySeconds = (errorMessage: string): number | null => {
   const directSecondsMatch = errorMessage.match(/retry in\s+(\d+(?:\.\d+)?)s?/i);
   if (directSecondsMatch?.[1]) {
@@ -354,6 +373,41 @@ export async function POST(req: NextRequest) {
       const recoveredOutput = extractBestTextResponse(recoveredResult.messages);
       if (recoveredOutput) {
         output = recoveredOutput;
+      }
+    }
+
+    if (looksUnstructuredOrTooLong(output)) {
+      const formattingPrompt = `أعد صياغة الإجابة السابقة فقط بصيغة عربية منظمة ومختصرة، بدون أي JSON خام، وبدون شرح خطوات داخلية.
+
+التزم بهذا القالب حرفيًا:
+
+📅 **الشهر:** <اسم الشهر> <السنة>
+
+💰 **إجمالي المبيعات (بعد الخصومات):** <رقم>
+📦 **إجمالي تكلفة البضائع:** <رقم>
+📈 **الربح قبل المصاريف:** <رقم>
+🏢 **المصاريف الثابتة:** غير محتسبة (حسب طلبك)
+
+📊 **تفصيل الربحية حسب المنتج (مختصر):**
+- اعرض بحد أقصى 15 سطرًا فقط.
+- كل سطر: اسم المنتج/المعرف | الكمية | إجمالي الخصم | الربح.
+
+⚠️ **أعلى العناصر الخاسرة (إن وجدت):**
+- اعرض بحد أقصى 5 عناصر خاسرة.
+
+✅ **خلاصة سريعة:**
+- سطران فقط يوضحان حالة الربحية العامة.
+
+ممنوع عرض أكثر من 15 منتج في التفصيل.`;
+
+      const formattedResult = await agent.invoke(
+        { messages: [{ role: "user", content: formattingPrompt }] },
+        config
+      );
+
+      const formattedOutput = extractBestTextResponse(formattedResult.messages);
+      if (formattedOutput) {
+        output = formattedOutput;
       }
     }
 
