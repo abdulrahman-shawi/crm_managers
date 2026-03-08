@@ -28,7 +28,7 @@ const pool = new Pool({ connectionString: databaseUrl });
 const sqlReadOnlyTool = new DynamicTool({
   name: "query_crm_database",
   description:
-    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH. Important: use Prisma table names with double quotes like \"Invoice\", \"InvoiceItem\", \"Product\", \"FixedExpense\".",
+    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH. Important: use Prisma table names and camelCase columns with double quotes like \"Invoice\", \"InvoiceItem\", \"Product\", \"FixedExpense\", and columns like \"invoiceId\", \"productId\", \"unitPrice\", \"totalAmount\", \"priceLow\", \"createdAt\".",
   func: async (query: string) => {
     const normalized = query.trim().toLowerCase();
 
@@ -43,7 +43,7 @@ const sqlReadOnlyTool = new DynamicTool({
       const errorMessage = String(error?.message ?? "Unknown SQL error");
 
       if (errorMessage.includes("does not exist")) {
-        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, table names are case-sensitive and often require double quotes. Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". For "Invoice", use columns like "date" and "createdAt" (not created_at).`;
+        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, quote table and camelCase column names with double quotes. Example join: FROM "InvoiceItem" ii JOIN "Invoice" i ON ii."invoiceId" = i."id". Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". Common columns: "invoiceId", "productId", "unitPrice", "discount", "subTotal", "totalAmount", "priceLow", "createdAt", "date".`;
       }
 
       return `SQL error: ${errorMessage}`;
@@ -84,6 +84,22 @@ const extractTextContent = (content: unknown): string => {
     const maybeText = (content as any).text;
     if (typeof maybeText === "string") {
       return maybeText.trim();
+    }
+  }
+
+  return "";
+};
+
+const extractBestTextResponse = (messages: any[] | undefined): string => {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return "";
+  }
+
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = messages[index];
+    const text = extractTextContent(message?.content);
+    if (text) {
+      return text;
     }
   }
 
@@ -134,6 +150,7 @@ export async function POST(req: NextRequest) {
 - لا تفترض وجود خصومات إلا إذا كانت الأعمدة موجودة في الجداول.
 - استخدم أسماء الجداول كما هي في PostgreSQL مع علامات تنصيص مزدوجة عند الحاجة.
 - أسماء الجداول الأساسية في هذا النظام: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer".
+- ملاحظة SQL مهمة: استخدم علامات تنصيص مزدوجة دائمًا مع أسماء الأعمدة camelCase مثل "invoiceId", "productId", "unitPrice", "totalAmount", "priceLow", "createdAt".
 
 🎯 الهدف:
 حساب أرباح شهر يحدده المستخدم بدقة محاسبية، مع الأخذ بالحسبان:
@@ -175,6 +192,7 @@ export async function POST(req: NextRequest) {
   - subTotal
 
 ⚠️ إذا لم يوجد خصم على المنتج → اعتبره 0.
+⚠️ عند كتابة SQL لا تكتب invoiceId بدون تنصيص، اكتبها "invoiceId".
 
 ---
 
@@ -246,9 +264,8 @@ export async function POST(req: NextRequest) {
       config
     );
 
-    // 5. الحصول على آخر رسالة من الوكيل
-    const lastMessage = result.messages?.[result.messages.length - 1];
-    const output = extractTextContent(lastMessage?.content);
+    // 5. الحصول على أفضل رسالة نصية من الوكيل
+    const output = extractBestTextResponse(result.messages);
 
     return NextResponse.json({ 
       output: output || "تعذر استخراج رد نصي من النموذج. حاول إعادة صياغة السؤال."
