@@ -32,7 +32,19 @@ export async function GET(request: Request) {
             },
             include: {
                 customer: true,
-                items: true,
+                items: {
+                    include: {
+                        product: {
+                            select: {
+                                id: true,
+                                name: true,
+                                modelNumber: true,
+                                priceLow: true,
+                                price: true,
+                            },
+                        },
+                    },
+                },
             },
             orderBy: {
                 createdAt: "desc"

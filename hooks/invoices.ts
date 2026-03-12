@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 /* ========= Types ========= */
@@ -13,7 +13,33 @@ export interface Invoice {
   date: string;
   status: "مدفوعة" | "معلقة";
   type: "REVENUE" | "EXPENSE";
-  rawItems?: any[];
+  rawItems?: InvoiceItemRaw[];
+}
+
+interface InvoiceItemRaw {
+  id: number;
+  productId: number;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  subTotal: number;
+  product?: {
+    id: number;
+    name: string;
+    modelNumber?: string | null;
+    priceLow?: number | null;
+    price?: number | null;
+  } | null;
+}
+
+export interface ProductProfitRow {
+  productId: number;
+  productName: string;
+  modelNumber: string;
+  soldQuantity: number;
+  wholesaleTotal: number;
+  salesTotal: number;
+  netProfit: number;
 }
 
 export type InvoiceDateFilter = "this_month" | "last_month" | "last_7_days" | "today" | "custom";
@@ -149,6 +175,44 @@ export function useInvoices() {
   const totalExpenses = expenses.reduce((s, i) => s + i.amount, 0);
   const netBalance = totalRevenues - totalExpenses;
 
+  const productProfitAnalysis = useMemo<ProductProfitRow[]>(() => {
+    const rows = new Map<number, ProductProfitRow>();
+
+    revenues.forEach((invoice) => {
+      (invoice.rawItems || []).forEach((item) => {
+        const key = item.productId;
+        const salesTotal = Number(item.subTotal ?? item.unitPrice * item.quantity);
+        const wholesalePrice = Number(item.product?.priceLow ?? 0);
+        const wholesaleTotal = wholesalePrice * Number(item.quantity || 0);
+
+        const existing = rows.get(key);
+        if (!existing) {
+          rows.set(key, {
+            productId: key,
+            productName: item.product?.name || `منتج #${key}`,
+            modelNumber: item.product?.modelNumber || "-",
+            soldQuantity: Number(item.quantity || 0),
+            wholesaleTotal,
+            salesTotal,
+            netProfit: salesTotal - wholesaleTotal,
+          });
+          return;
+        }
+
+        existing.soldQuantity += Number(item.quantity || 0);
+        existing.wholesaleTotal += wholesaleTotal;
+        existing.salesTotal += salesTotal;
+        existing.netProfit += salesTotal - wholesaleTotal;
+      });
+    });
+
+    return Array.from(rows.values()).sort((a, b) => b.netProfit - a.netProfit);
+  }, [revenues]);
+
+  const monthlySalesTotal = productProfitAnalysis.reduce((sum, row) => sum + row.salesTotal, 0);
+  const monthlyWholesaleTotal = productProfitAnalysis.reduce((sum, row) => sum + row.wholesaleTotal, 0);
+  const monthlyNetProfit = productProfitAnalysis.reduce((sum, row) => sum + row.netProfit, 0);
+
   /* ========= Actions ========= */
   const addNewItem = () => {
     setItems([...items, { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 , modelNumber:"" }]);
@@ -234,6 +298,10 @@ export function useInvoices() {
     totalRevenues,
     totalExpenses,
     netBalance,
+    productProfitAnalysis,
+    monthlySalesTotal,
+    monthlyWholesaleTotal,
+    monthlyNetProfit,
     dateFilter,
     customFrom,
     customTo,

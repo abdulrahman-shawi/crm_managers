@@ -28,6 +28,10 @@ export default function InvoicesDashboard() {
         totalRevenues,
         totalExpenses,
         netBalance,
+        productProfitAnalysis,
+        monthlySalesTotal,
+        monthlyWholesaleTotal,
+        monthlyNetProfit,
         dateFilter,
         customFrom,
         customTo,
@@ -40,7 +44,12 @@ export default function InvoicesDashboard() {
         <div className="space-y-8 p-4 md:p-8" dir="rtl">
             {/* بطاقات الملخص */}
             {/* بطاقات الملخص الديناميكية */}
-            <AnalycisInvoices netBalance={netBalance} totalRevenues={totalRevenues} totalExpenses={totalExpenses} />
+            <AnalycisInvoices
+                netBalance={netBalance}
+                totalRevenues={totalRevenues}
+                totalExpenses={totalExpenses}
+                monthlyNetProfit={monthlyNetProfit}
+            />
             {/* شريط التحكم */}
             <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white dark:bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-full md:w-auto">
@@ -89,6 +98,55 @@ export default function InvoicesDashboard() {
 
             {/* الجدول */}
             <InvoicesTable invoices={invoices} />
+
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
+                    <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">تحليل ربح المبيعات لكل منتج</h3>
+                    <p className="text-slate-500 text-sm mt-1">يتم احتساب صافي الربح = سعر البيع - سعر الجملة حسب البنود المباعة ضمن الفلتر الحالي.</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
+                        <span className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700">إجمالي البيع: ل.س{monthlySalesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className="px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700">إجمالي الجملة: ل.س{monthlyWholesaleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                        <span className={`px-4 py-2 rounded-xl ${monthlyNetProfit >= 0 ? "bg-blue-50 dark:bg-blue-900/20 text-blue-700" : "bg-red-50 dark:bg-red-900/20 text-red-700"}`}>
+                            صافي الربح: ل.س{monthlyNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-right">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase border-b border-slate-100 dark:border-slate-800">
+                            <tr>
+                                <th className="px-8 py-4">المنتج</th>
+                                <th className="px-8 py-4">الموديل</th>
+                                <th className="px-8 py-4">الكمية المباعة</th>
+                                <th className="px-8 py-4">إجمالي الجملة</th>
+                                <th className="px-8 py-4">إجمالي البيع</th>
+                                <th className="px-8 py-4">صافي الربح</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {productProfitAnalysis.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد مبيعات ضمن الفلتر الحالي</td>
+                                </tr>
+                            ) : (
+                                productProfitAnalysis.map((row) => (
+                                    <tr key={row.productId} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-8 py-4 font-bold text-slate-800 dark:text-slate-100">{row.productName}</td>
+                                        <td className="px-8 py-4 text-slate-500 font-mono">{row.modelNumber}</td>
+                                        <td className="px-8 py-4 font-black">{row.soldQuantity}</td>
+                                        <td className="px-8 py-4 font-black text-amber-700">ل.س{row.wholesaleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className="px-8 py-4 font-black text-emerald-700">ل.س{row.salesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                        <td className={`px-8 py-4 font-black ${row.netProfit >= 0 ? "text-blue-700" : "text-red-600"}`}>
+                                            ل.س{row.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
             {/* الإجرائات */}
             <AddInvoiceModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} manager={invoices} type={activeTab} customers={customers} products={products} />
             <ViewInvoiceModal isOpen={isViewOpen} onClose={() => setIsViewOpen(false)} invoice={selectedInvoice} products={products} />
