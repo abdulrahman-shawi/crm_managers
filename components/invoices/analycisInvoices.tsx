@@ -5,7 +5,7 @@ import * as React from 'react';
 
 const AnalycisInvoices = ({netBalance , totalRevenues , totalExpenses, monthlyNetProfit}:any) => {
   return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* صافي الرصيد */}
                 <div className="lg:col-span-1 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 rounded-[2.5rem] text-white shadow-xl">
                     <p className="text-blue-100 text-sm font-medium">صافي الرصيد الحالي (حسب الفلتر)</p>
