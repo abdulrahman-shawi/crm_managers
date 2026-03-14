@@ -33,21 +33,42 @@ const PRISMA_CAMEL_CASE_COLUMNS: Record<string, string> = {
   totalamount: "totalAmount",
   pricelow: "priceLow",
   createdat: "createdAt",
+  modelnumber: "modelNumber",
+  categoryid: "categoryId",
+  customerid: "customerId",
+  userid: "userId",
+  isactive: "isActive",
+  lastlogin: "lastLogin",
+  updatedat: "updatedAt",
+  duedate: "dueDate",
 };
 
 const normalizeSqlForPrismaIdentifiers = (query: string): string => {
   let nextQuery = query;
 
+  // Build regex alternatives from all known column keys and their camelCase forms
+  const allColumnVariants = Object.entries(PRISMA_CAMEL_CASE_COLUMNS).flatMap(
+    ([lower, camel]) => (lower === camel.toLowerCase() ? [lower] : [lower, camel])
+  );
+  const columnAlternatives = allColumnVariants.join("|");
+
   nextQuery = nextQuery.replace(
-    /\b([a-zA-Z_][a-zA-Z0-9_]*)\.(invoiceid|invoiceId|productid|productId|unitprice|unitPrice|subtotal|subTotal|totalamount|totalAmount|pricelow|priceLow|createdat|createdAt)\b/g,
+    new RegExp(
+      `\\b([a-zA-Z_][a-zA-Z0-9_]*)\\.(${columnAlternatives})\\b`,
+      "g"
+    ),
     (_full, alias: string, column: string) => {
       const normalized = PRISMA_CAMEL_CASE_COLUMNS[column.toLowerCase()] ?? column;
       return `${alias}."${normalized}"`;
     }
   );
 
+  // Lookbehind: not preceded by a quote, dot, or word char (to avoid already-quoted or aliased identifiers)
+  // Lookahead: not followed by a quote or word char
+  const lookbehind = '(?<![".\\w])';
+  const lookahead = '(?![".\\w])';
   nextQuery = nextQuery.replace(
-    /(?<![".\w])(invoiceid|invoiceId|productid|productId|unitprice|unitPrice|subtotal|subTotal|totalamount|totalAmount|pricelow|priceLow|createdat|createdAt)(?!["\w])/g,
+    new RegExp(lookbehind + "(" + columnAlternatives + ")" + lookahead, "g"),
     (column: string) => {
       const normalized = PRISMA_CAMEL_CASE_COLUMNS[column.toLowerCase()] ?? column;
       return `"${normalized}"`;
@@ -60,7 +81,7 @@ const normalizeSqlForPrismaIdentifiers = (query: string): string => {
 const sqlReadOnlyTool = new DynamicTool({
   name: "query_crm_database",
   description:
-    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH. Important: use Prisma table names and camelCase columns with double quotes like \"Invoice\", \"InvoiceItem\", \"Product\", \"FixedExpense\", and columns like \"invoiceId\", \"productId\", \"unitPrice\", \"totalAmount\", \"priceLow\", \"createdAt\".",
+    "Use this tool to run READ-ONLY SQL queries on the CRM PostgreSQL database. Input must be a SQL string and should start with SELECT or WITH. Important: use Prisma table names and camelCase columns with double quotes like \"Invoice\", \"InvoiceItem\", \"Product\", \"FixedExpense\", and columns like \"invoiceId\", \"productId\", \"unitPrice\", \"totalAmount\", \"priceLow\", \"createdAt\", \"name\", \"modelNumber\". To get product names always JOIN the Product table: JOIN \"Product\" p ON ii.\"productId\" = p.\"id\" and SELECT p.\"name\" as \"productName\". To search products by name use: WHERE p.\"name\" ILIKE '%search_term%'.",
   func: async (query: string) => {
     const normalized = query.trim().toLowerCase();
 
@@ -95,7 +116,7 @@ const sqlReadOnlyTool = new DynamicTool({
       }
 
       if (errorMessage.includes("does not exist")) {
-        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, quote table and camelCase column names with double quotes. Example join: FROM "InvoiceItem" ii JOIN "Invoice" i ON ii."invoiceId" = i."id". Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". Common columns: "invoiceId", "productId", "unitPrice", "discount", "subTotal", "totalAmount", "priceLow", "createdAt", "date".`;
+        return `SQL error: ${errorMessage}. Hint: In PostgreSQL with Prisma, quote table and camelCase column names with double quotes. Example join: FROM "InvoiceItem" ii JOIN "Invoice" i ON ii."invoiceId" = i."id" JOIN "Product" p ON ii."productId" = p."id". Use tables: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer". Common columns: "invoiceId", "productId", "unitPrice", "discount", "subTotal", "totalAmount", "priceLow", "createdAt", "date", "name", "modelNumber". To get product names always join Product and select p."name" as "productName".`;
       }
 
       return `SQL error: ${errorMessage}`;
@@ -185,9 +206,11 @@ const looksUnstructuredOrTooLong = (text: string): boolean => {
     trimmed.includes("📦 **إجمالي تكلفة البضائع") &&
     trimmed.includes("📈 **الربح قبل المصاريف");
 
+  // Detect when the output uses product IDs instead of product names
   const productMentions = (trimmed.match(/Product ID/gi) ?? []).length;
+  const arabicProductIdMentions = (trimmed.match(/معرف المنتج|رقم المنتج|productid/gi) ?? []).length;
   const veryLong = trimmed.length > 7000;
-  const tooManyProductLines = productMentions > 25;
+  const tooManyProductLines = productMentions > 25 || arabicProductIdMentions > 5;
 
   return !hasMainSections || veryLong || tooManyProductLines;
 };
@@ -237,6 +260,9 @@ export async function POST(req: NextRequest) {
 - استخدم أسماء الجداول كما هي في PostgreSQL مع علامات تنصيص مزدوجة عند الحاجة.
 - أسماء الجداول الأساسية في هذا النظام: "Invoice", "InvoiceItem", "Product", "FixedExpense", "User", "Category", "Customer".
 - ملاحظة SQL مهمة: استخدم علامات تنصيص مزدوجة دائمًا مع أسماء الأعمدة camelCase مثل "invoiceId", "productId", "unitPrice", "totalAmount", "priceLow", "createdAt".
+- ⚠️ دائمًا استخدم JOIN مع جدول "Product" للحصول على اسم المنتج (p."name") وليس فقط المعرف (productId). مثال: JOIN "Product" p ON ii."productId" = p."id"
+- ⚠️ عند البحث عن منتج باسمه استخدم: WHERE p."name" ILIKE '%اسم_المنتج%'
+- ⚠️ في جميع الإخراجات استخدم اسم المنتج الحقيقي من قاعدة البيانات، لا تستخدم رقم المعرف (Product ID) أبدًا.
 
 🎯 الهدف:
 حساب أرباح شهر يحدده المستخدم بدقة محاسبية، مع الأخذ بالحسبان:
@@ -283,9 +309,13 @@ export async function POST(req: NextRequest) {
 ---
 
 4️⃣ جدول Product:
-- لكل productId مستخدم من الجدول "Product":
-  - احصل على priceLow (سعر الجملة)
-  - name
+- ⚠️ **إلزامي**: دائمًا اربط جدول "Product" مع "InvoiceItem" باستخدام JOIN للحصول على اسم المنتج:
+  JOIN "Product" p ON ii."productId" = p."id"
+- لكل منتج احصل على:
+  - p."name" كـ "productName" (اسم المنتج - مطلوب دائمًا في الإخراج)
+  - p."priceLow" (سعر الجملة)
+- إذا طلب المستخدم معلومات عن منتج باسمه، استخدم:
+  WHERE p."name" ILIKE '%اسم_المنتج%'
 
 ---
 
@@ -332,7 +362,7 @@ export async function POST(req: NextRequest) {
 ---
 
 📊 تفصيل اختياري:
-- اسم المنتج
+- اسم المنتج (من p."name" في قاعدة البيانات - لا تستخدم رقم المعرف)
 - الكمية
 - إجمالي الخصم
 - الربح لكل منتج
@@ -361,8 +391,8 @@ export async function POST(req: NextRequest) {
 التزم بالنقاط التالية:
 - اعرض: إجمالي المبيعات بعد الخصومات، إجمالي تكلفة البضائع، الربح قبل المصاريف.
 - إذا اختار المستخدم عدم احتساب المصاريف الثابتة، اذكر ذلك صراحة.
-- أضف تفصيلًا لكل منتج (الاسم، الكمية، إجمالي الخصم، الربح).
-- إذا البيانات غير كافية، قم بجلب المطلوب عبر الأداة ثم أعطِ النتيجة النهائية مباشرة.
+- أضف تفصيلًا لكل منتج (اسم المنتج الحقيقي من قاعدة البيانات، الكمية، إجمالي الخصم، الربح). لا تستخدم رقم المعرف (Product ID) - استخدم اسم المنتج دائمًا.
+- إذا البيانات غير كافية، قم بجلب المطلوب عبر الأداة باستخدام JOIN مع جدول "Product" للحصول على p."name" ثم أعطِ النتيجة النهائية مباشرة.
 - لا تطلب من المستخدم أسماء أعمدة ولا تفاصيل تقنية.`;
 
       const recoveredResult = await agent.invoke(
@@ -390,7 +420,9 @@ export async function POST(req: NextRequest) {
 
 📊 **تفصيل الربحية حسب المنتج (مختصر):**
 - اعرض بحد أقصى 15 سطرًا فقط.
-- كل سطر: اسم المنتج/المعرف | الكمية | إجمالي الخصم | الربح.
+- كل سطر: اسم المنتج (من قاعدة البيانات) | الكمية | إجمالي الخصم | الربح.
+- ⚠️ استخدم اسم المنتج الحقيقي دائمًا، لا تستخدم رقم المعرف (Product ID) أبدًا.
+- إذا لم يكن اسم المنتج متوفرًا في البيانات الحالية، نفذ استعلامًا إضافيًا: JOIN "Product" p ON ii."productId" = p."id" للحصول على p."name".
 
 ⚠️ **أعلى العناصر الخاسرة (إن وجدت):**
 - اعرض بحد أقصى 5 عناصر خاسرة.
