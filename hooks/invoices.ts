@@ -14,6 +14,7 @@ export interface Invoice {
   status: "مدفوعة" | "معلقة";
   type: "REVENUE" | "EXPENSE";
   rawItems?: InvoiceItemRaw[];
+  rawReturns?: InvoiceReturnRaw[];
 }
 
 interface InvoiceItemRaw {
@@ -30,6 +31,17 @@ interface InvoiceItemRaw {
     priceLow?: number | null;
     price?: number | null;
   } | null;
+}
+
+interface InvoiceReturnRaw {
+  id: string;
+  type: "REFUND" | "EXCHANGE";
+  quantity: number;
+  priceDifference: number;
+  note?: string | null;
+  createdAt: string;
+  returnedProduct?: { id: number; name: string } | null;
+  exchangedProduct?: { id: number; name: string } | null;
 }
 
 export interface ProductProfitRow {
@@ -146,6 +158,7 @@ export function useInvoices() {
       const formatted: Invoice[] = data.map((inv: any) => ({
         id: inv.id,
         rawItems: inv.items,
+        rawReturns: inv.returns || [],
         party: inv.customer?.name || "غير معروف",
         category: inv.items?.[0] ? `منتج: ${inv.items[0].productId}` : "عام",
         amount: Number(inv.totalAmount),

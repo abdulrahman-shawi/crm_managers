@@ -45,6 +45,17 @@ export async function GET(request: Request) {
                         },
                     },
                 },
+                returns: {
+                    include: {
+                        returnedProduct: {
+                            select: { id: true, name: true },
+                        },
+                        exchangedProduct: {
+                            select: { id: true, name: true },
+                        },
+                    },
+                    orderBy: { createdAt: "desc" },
+                },
             },
             orderBy: {
                 createdAt: "desc"

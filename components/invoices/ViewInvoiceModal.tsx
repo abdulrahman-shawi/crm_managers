@@ -92,6 +92,38 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                             </tbody>
                         </table>
 
+                        <div className="mb-10">
+                            <h3 className="text-lg font-black text-slate-800 mb-4">المرتجعات المرتبطة بهذه الفاتورة</h3>
+                            <table className="w-full text-right border border-slate-100 rounded-2xl overflow-hidden">
+                                <thead>
+                                    <tr className="bg-slate-100 text-slate-700">
+                                        <th className="px-4 py-3">النوع</th>
+                                        <th className="px-4 py-3">المنتج المرتجع</th>
+                                        <th className="px-4 py-3">المنتج البديل</th>
+                                        <th className="px-4 py-3">الكمية</th>
+                                        <th className="px-4 py-3">فرق السعر</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {invoice.rawReturns && invoice.rawReturns.length > 0 ? (
+                                        invoice.rawReturns.map((ret: any) => (
+                                            <tr key={ret.id} className="border-t border-slate-100">
+                                                <td className="px-4 py-3 font-bold">{ret.type === "EXCHANGE" ? "تبديل" : "ترجيع"}</td>
+                                                <td className="px-4 py-3">{ret.returnedProduct?.name || "-"}</td>
+                                                <td className="px-4 py-3">{ret.exchangedProduct?.name || "-"}</td>
+                                                <td className="px-4 py-3 font-bold">{ret.quantity}</td>
+                                                <td className="px-4 py-3 font-bold">ل.س{Number(ret.priceDifference || 0).toLocaleString()}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={5} className="px-4 py-4 text-center text-slate-400">لا توجد مرتجعات مرتبطة</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
                         {/* ملخص الحسابات */}
                         <div className="flex justify-end">
                             <div className="w-80 space-y-3 bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100">
