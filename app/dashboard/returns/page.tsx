@@ -22,6 +22,7 @@ type ReturnRecord = {
   id: string;
   type: ReturnType;
   quantity: number;
+  exchangedQuantity?: number | null;
   priceDifference: number;
   createdAt: string;
   invoice?: { id: string; customer?: { name?: string | null } | null } | null;
@@ -35,6 +36,7 @@ const initialForm = {
   returnedProductId: "",
   exchangedProductId: "",
   quantity: 1,
+  exchangedQuantity: 1,
   priceDifference: 0,
   note: "",
 };
@@ -127,6 +129,7 @@ export default function ReturnsPage() {
         returnedProductId: Number(form.returnedProductId),
         exchangedProductId: form.type === "EXCHANGE" ? Number(form.exchangedProductId) : undefined,
         quantity: Number(form.quantity),
+        exchangedQuantity: form.type === "EXCHANGE" ? Number(form.exchangedQuantity || 1) : undefined,
         priceDifference: form.type === "EXCHANGE" ? Number(form.priceDifference || 0) : 0,
         note: form.note || undefined,
       };
@@ -201,6 +204,7 @@ export default function ReturnsPage() {
                   ...prev,
                   type: e.target.value as ReturnType,
                   exchangedProductId: "",
+                  exchangedQuantity: 1,
                   priceDifference: 0,
                 }))
               }
@@ -292,6 +296,18 @@ export default function ReturnsPage() {
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
                 />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-600">الكمية المبدلة</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.exchangedQuantity}
+                  onChange={(e) => setForm((prev) => ({ ...prev, exchangedQuantity: Number(e.target.value || 1) }))}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
+                  required
+                />
+              </div>
             </>
           )}
 
@@ -334,6 +350,7 @@ export default function ReturnsPage() {
                 <th className="px-6 py-4">المنتج المرتجع</th>
                 <th className="px-6 py-4">المنتج البديل</th>
                 <th className="px-6 py-4">الكمية</th>
+                <th className="px-6 py-4">الكمية المبدلة</th>
                 <th className="px-6 py-4">فرق السعر</th>
                 <th className="px-6 py-4">الفاتورة</th>
                 <th className="px-6 py-4">التاريخ</th>
@@ -342,11 +359,11 @@ export default function ReturnsPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-slate-400">جاري التحميل...</td>
+                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">جاري التحميل...</td>
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-slate-400">لا توجد مرتجعات بعد</td>
+                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">لا توجد مرتجعات بعد</td>
                 </tr>
               ) : (
                 records.map((record) => (
@@ -373,6 +390,7 @@ export default function ReturnsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 font-black">{record.quantity}</td>
+                    <td className="px-6 py-4 font-black">{record.type === "EXCHANGE" ? (record.exchangedQuantity || 0) : "-"}</td>
                     <td className="px-6 py-4 font-black">ل.س{Number(record.priceDifference || 0).toLocaleString()}</td>
                     <td className="px-6 py-4 font-mono text-xs">{record.invoice?.id?.slice(-8) || "-"}</td>
                     <td className="px-6 py-4 text-sm text-slate-500">

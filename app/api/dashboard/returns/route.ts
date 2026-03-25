@@ -7,6 +7,7 @@ type ReturnPayload = {
   returnedProductId: number;
   exchangedProductId?: number;
   quantity: number;
+  exchangedQuantity?: number;
   priceDifference?: number;
   note?: string;
 };
@@ -81,6 +82,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "الكمية غير صالحة" }, { status: 400 });
     }
 
+    const exchangedQuantity =
+      body.type === "EXCHANGE"
+        ? Number(body.exchangedQuantity ?? body.quantity)
+        : null;
+
+    if (body.type === "EXCHANGE" && (!exchangedQuantity || Number.isNaN(exchangedQuantity) || exchangedQuantity <= 0)) {
+      return NextResponse.json({ error: "الكمية المبدلة غير صالحة" }, { status: 400 });
+    }
+
     if (body.invoiceId) {
       const invoice = await prisma.invoice.findUnique({ where: { id: body.invoiceId } });
       if (!invoice) {
@@ -112,7 +122,7 @@ export async function POST(request: Request) {
           throw new Error("المنتج البديل غير موجود");
         }
 
-        if (replacementProduct.stock < quantity) {
+        if (replacementProduct.stock < (exchangedQuantity as number)) {
           throw new Error(`مخزون المنتج البديل غير كاف: ${replacementProduct.name}`);
         }
 
@@ -120,7 +130,7 @@ export async function POST(request: Request) {
           where: { id: Number(body.exchangedProductId) },
           data: {
             stock: {
-              decrement: quantity,
+              decrement: exchangedQuantity as number,
             },
           },
         });
@@ -133,6 +143,7 @@ export async function POST(request: Request) {
           returnedProductId: Number(body.returnedProductId),
           exchangedProductId: body.type === "EXCHANGE" ? Number(body.exchangedProductId) : null,
           quantity,
+          exchangedQuantity,
           priceDifference: Number(body.priceDifference || 0),
           note: body.note || null,
         },

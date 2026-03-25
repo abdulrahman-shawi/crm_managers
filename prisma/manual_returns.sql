@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS "Return" (
   "id" TEXT PRIMARY KEY,
   "type" "ReturnType" NOT NULL,
   "quantity" INTEGER NOT NULL DEFAULT 1,
+  "exchangedQuantity" INTEGER,
   "priceDifference" DOUBLE PRECISION NOT NULL DEFAULT 0,
   "note" TEXT,
   "invoiceId" TEXT,
@@ -16,6 +17,8 @@ CREATE TABLE IF NOT EXISTS "Return" (
   "exchangedProductId" INTEGER,
   "createdAt" TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE "Return" ADD COLUMN IF NOT EXISTS "exchangedQuantity" INTEGER;
 
 CREATE INDEX IF NOT EXISTS "Return_invoiceId_idx" ON "Return"("invoiceId");
 CREATE INDEX IF NOT EXISTS "Return_returnedProductId_idx" ON "Return"("returnedProductId");

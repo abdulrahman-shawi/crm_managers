@@ -91,6 +91,7 @@ model Return {
   id                 String      @id @default(cuid())
   type               ReturnType
   quantity           Int         @default(1)
+  exchangedQuantity  Int?
   priceDifference    Float       @default(0)
   note               String?
   invoiceId          String?
