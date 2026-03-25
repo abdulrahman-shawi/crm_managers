@@ -61,6 +61,17 @@ interface DateRange {
   to: string;
 }
 
+const initialInvoiceItem = {
+  productId: "",
+  name: "",
+  price: 0,
+  quantity: 1,
+  discount: 0,
+  note: "",
+  total: 0,
+  modelNumber: "",
+};
+
 const toDateOnly = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -124,9 +135,7 @@ export function useInvoices() {
   const [client, setClient] = useState("");
   const [status, setStatus] = useState<"مدفوعة" | "معلقة">("مدفوعة");
   const [overallDiscount, setOverallDiscount] = useState(0);
-  const [items, setItems] = useState([
-        { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 , modelNumber : "" }
-    ]);
+  const [items, setItems] = useState([initialInvoiceItem]);
 
   const [searchQueries, setSearchQueries] = useState<Record<number, string>>({});
   const [showDropdown, setShowDropdown] = useState<Record<number, boolean>>({});
@@ -228,7 +237,7 @@ export function useInvoices() {
 
   /* ========= Actions ========= */
   const addNewItem = () => {
-    setItems([...items, { productId: "", name: "", price: 0, quantity: 1, discount: 0, note: "", total: 0 , modelNumber:"" }]);
+    setItems([...items, { ...initialInvoiceItem }]);
   };
 
   const updateItem = (index: number, field: string, value: any, products: any[]) => {
@@ -269,19 +278,30 @@ export function useInvoices() {
     };
 
     try {
-      await fetch("/api/dashboard/invoices", {
+      const response = await fetch("/api/dashboard/invoices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(invoiceData),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.details || errorData?.error || "فشل حفظ الفاتورة");
+      }
+
       axios.post("https://kyzendev.app.n8n.cloud/webhook/e6f93672-158d-437b-84fc-fdda3b2a62b8", invoiceData)
         .catch(console.error);
 
+      setClient("");
+      setStatus("مدفوعة");
+      setOverallDiscount(0);
+      setItems([{ ...initialInvoiceItem }]);
+      setSearchQueries({});
+      setShowDropdown({});
       setIsModalOpen(false);
       fetchInvoices();
-    } catch (e) {
-      alert("فشل الحفظ");
+    } catch (e: any) {
+      alert(e?.message || "فشل الحفظ");
     } finally {
       setIsSubmitting(false);
     }
