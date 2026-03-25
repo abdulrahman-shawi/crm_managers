@@ -13,7 +13,7 @@ type ReturnPayload = {
 
 export async function GET() {
   try {
-    const returns = await (prisma as any).return.findMany({
+    const returns = await prisma.return.findMany({
       include: {
         invoice: {
           select: {
@@ -126,7 +126,7 @@ export async function POST(request: Request) {
         });
       }
 
-      return (tx as any).return.create({
+      return tx.return.create({
         data: {
           invoiceId: body.invoiceId || null,
           type: body.type,
