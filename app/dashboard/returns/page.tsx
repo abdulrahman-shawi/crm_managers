@@ -44,6 +44,8 @@ export default function ReturnsPage() {
   const [invoices, setInvoices] = useState<InvoiceLite[]>([]);
   const [records, setRecords] = useState<ReturnRecord[]>([]);
   const [form, setForm] = useState(initialForm);
+  const [returnedProductSearch, setReturnedProductSearch] = useState("");
+  const [exchangedProductSearch, setExchangedProductSearch] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,9 +81,29 @@ export default function ReturnsPage() {
     fetchData();
   }, []);
 
+  const searchableReturnedProducts = useMemo(() => {
+    const query = returnedProductSearch.trim().toLowerCase();
+    if (!query) return products;
+
+    return products.filter((p) => {
+      const productName = p.name?.toLowerCase() || "";
+      const modelNumber = p.modelNumber?.toLowerCase() || "";
+      return productName.includes(query) || modelNumber.includes(query);
+    });
+  }, [products, returnedProductSearch]);
+
   const selectableReplacementProducts = useMemo(() => {
-    return products.filter((p) => String(p.id) !== form.returnedProductId);
-  }, [products, form.returnedProductId]);
+    const query = exchangedProductSearch.trim().toLowerCase();
+    const replacementProducts = products.filter((p) => String(p.id) !== form.returnedProductId);
+
+    if (!query) return replacementProducts;
+
+    return replacementProducts.filter((p) => {
+      const productName = p.name?.toLowerCase() || "";
+      const modelNumber = p.modelNumber?.toLowerCase() || "";
+      return productName.includes(query) || modelNumber.includes(query);
+    });
+  }, [products, form.returnedProductId, exchangedProductSearch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +144,8 @@ export default function ReturnsPage() {
 
       setRecords((prev) => [data, ...prev]);
       setForm(initialForm);
+      setReturnedProductSearch("");
+      setExchangedProductSearch("");
 
       // تحديث بيانات المنتجات مباشرة بعد تعديل المخزون
       const productsRes = await fetch("/api/dashboard/products");
@@ -189,14 +213,26 @@ export default function ReturnsPage() {
 
           <div className="space-y-2">
             <label className="text-sm font-bold text-slate-600">المنتج المرتجع</label>
+            <input
+              type="text"
+              value={returnedProductSearch}
+              onChange={(e) => setReturnedProductSearch(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
+              placeholder="ابحث بالاسم أو رقم الموديل"
+            />
             <select
               value={form.returnedProductId}
-              onChange={(e) => setForm((prev) => ({ ...prev, returnedProductId: e.target.value }))}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const selected = products.find((p) => String(p.id) === selectedId);
+                setForm((prev) => ({ ...prev, returnedProductId: selectedId }));
+                setReturnedProductSearch(selected?.name || "");
+              }}
               className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
               required
             >
               <option value="">اختر المنتج</option>
-              {products.map((product) => (
+              {searchableReturnedProducts.map((product) => (
                 <option key={product.id} value={product.id}>
                   {product.name} ({product.modelNumber || "-"}) - مخزون: {product.stock}
                 </option>
@@ -220,9 +256,21 @@ export default function ReturnsPage() {
             <>
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-600">المنتج البديل</label>
+                <input
+                  type="text"
+                  value={exchangedProductSearch}
+                  onChange={(e) => setExchangedProductSearch(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
+                  placeholder="ابحث بالاسم أو رقم الموديل"
+                />
                 <select
                   value={form.exchangedProductId}
-                  onChange={(e) => setForm((prev) => ({ ...prev, exchangedProductId: e.target.value }))}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selected = products.find((p) => String(p.id) === selectedId);
+                    setForm((prev) => ({ ...prev, exchangedProductId: selectedId }));
+                    setExchangedProductSearch(selected?.name || "");
+                  }}
                   className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-3 rounded-2xl"
                   required
                 >
