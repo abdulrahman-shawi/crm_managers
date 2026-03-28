@@ -50,10 +50,10 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
                                     type="text"
                                     value={searchQueries[index] || item.name || item.modelNumber}
                                     placeholder="اكتب اسم المنتج..."
-                                    onFocus={() => setShowDropdown({ ...showDropdown, [index]: true })}
+                                    onFocus={() => setShowDropdown((prev: any) => ({ ...prev, [index]: true }))}
                                     onChange={(e) => {
-                                        setSearchQueries({ ...searchQueries, [index]: e.target.value });
-                                        setShowDropdown({ ...showDropdown, [index]: true });
+                                        setSearchQueries((prev: any) => ({ ...prev, [index]: e.target.value }));
+                                        setShowDropdown((prev: any) => ({ ...prev, [index]: true }));
                                     }}
                                     className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl border-none outline-none font-bold text-sm shadow-sm"
                                 />

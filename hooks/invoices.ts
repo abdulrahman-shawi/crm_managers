@@ -237,27 +237,34 @@ export function useInvoices() {
 
   /* ========= Actions ========= */
   const addNewItem = () => {
-    setItems([...items, { ...initialInvoiceItem }]);
+    setItems((prev) => [...prev, { ...initialInvoiceItem }]);
   };
 
   const updateItem = (index: number, field: string, value: any, products: any[]) => {
-    const newItems = [...items];
-    const item = newItems[index];
+    setItems((prevItems) => {
+      const newItems = [...prevItems];
+      const current = newItems[index];
+      if (!current) return prevItems;
 
-    if (field === "productId") {
-      const product = products.find(p => p.id === Number(value));
-      item.productId = value;
-      item.name = product?.name || "";
-      item.modelNumber = product?.modelNumber || "";
-      item.price = product?.price || 0;
-      setSearchQueries({ ...searchQueries, [index]: item.name });
-      setShowDropdown({ ...showDropdown, [index]: false });
-    } else {
-      (item as any)[field] = value;
-    }
+      const item = { ...current } as any;
 
-    item.total = item.price * item.quantity - item.discount;
-    setItems(newItems);
+      if (field === "productId") {
+        const product = products.find((p) => p.id === Number(value));
+        item.productId = value;
+        item.name = product?.name || "";
+        item.modelNumber = product?.modelNumber || "";
+        item.price = product?.price || 0;
+
+        setSearchQueries((prev) => ({ ...prev, [index]: item.name }));
+        setShowDropdown((prev) => ({ ...prev, [index]: false }));
+      } else {
+        item[field] = value;
+      }
+
+      item.total = item.price * item.quantity - item.discount;
+      newItems[index] = item;
+      return newItems;
+    });
   };
 
   const handleSubmit = async () => {
