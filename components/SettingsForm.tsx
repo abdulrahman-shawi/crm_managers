@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { 
   Info, Mail, Share2, Shield, 
-  Save, Loader2, Globe, Facebook, Instagram 
+  Save, Loader2, Wallet, Facebook, Instagram 
 } from "lucide-react";
 import { updateSettingsAction } from "@/actions/settings"; // تأكد من إنشاء هذا الملف
 
@@ -55,6 +55,23 @@ export default function SettingsForm({ initialData }: { initialData: any }) {
                 <option value="USD">USD ($)</option>
                 <option value="SAR">SYR (ل.س)</option>
               </select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium dark:text-slate-300 flex items-center gap-2">
+                <Wallet size={16} className="text-slate-400" /> مبلغ فتح الحساب
+              </label>
+              <input
+                name="openingBalance"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={initialData?.openingBalance ?? 0}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                placeholder="0.00"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                سيتم احتساب الرصيد الحالي في الفواتير كالتالي: مبلغ الافتتاح + المقبوضات - المدفوعات.
+              </p>
             </div>
           </div>
 

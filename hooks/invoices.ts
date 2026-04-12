@@ -144,6 +144,7 @@ export function useInvoices() {
   /* ===== Data ===== */
   const [revenues, setRevenues] = useState<Invoice[]>([]);
   const [expenses, setExpenses] = useState<Invoice[]>([]);
+  const [openingBalance, setOpeningBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<InvoiceDateFilter>("this_month");
   const [customFrom, setCustomFrom] = useState("");
@@ -185,9 +186,26 @@ export function useInvoices() {
     }
   };
 
+  const fetchOpeningBalance = async () => {
+    try {
+      const res = await fetch("/api/dashboard/general-settings", { cache: "no-store" });
+      if (!res.ok) throw new Error("Fetch settings failed");
+
+      const data = await res.json();
+      setOpeningBalance(Number(data?.openingBalance ?? 0));
+    } catch (error) {
+      console.error(error);
+      setOpeningBalance(0);
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
   }, [dateFilter, customFrom, customTo]);
+
+  useEffect(() => {
+    fetchOpeningBalance();
+  }, []);
 
   /* ========= Calculations ========= */
   const subTotal = items.reduce((sum, i) => sum + i.total, 0);
@@ -195,7 +213,7 @@ export function useInvoices() {
 
   const totalRevenues = revenues.reduce((s, i) => s + i.amount, 0);
   const totalExpenses = expenses.reduce((s, i) => s + i.amount, 0);
-  const netBalance = totalRevenues - totalExpenses;
+  const netBalance = openingBalance + totalRevenues - totalExpenses;
 
   const productProfitAnalysis = useMemo<ProductProfitRow[]>(() => {
     const rows = new Map<number, ProductProfitRow>();
@@ -335,6 +353,7 @@ export function useInvoices() {
     overallDiscount,
     subTotal,
     grandTotal,
+    openingBalance,
     totalRevenues,
     totalExpenses,
     netBalance,

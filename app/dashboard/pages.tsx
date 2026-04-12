@@ -69,7 +69,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="إجمالي المستخدمين" value={users} icon={Users} trend="+12%" />
-        <StatCard title="الأرباح" value={`${netBalance.toLocaleString(undefined, {minimumFractionDigits:2})} ل.س`} icon={DollarSign} trend="+8%" />
+        <StatCard title="رصيد الحساب" value={`${netBalance.toLocaleString(undefined, {minimumFractionDigits:2})} ل.س`} icon={DollarSign} trend="+8%" />
         <StatCard title="الفواتير" value={expenses.length + revenues.length} icon={ShoppingCart} trend="+5%" />
         <StatCard title="معدل النشاط" value="89%" icon={Activity} trend="+2%" />
       </div>

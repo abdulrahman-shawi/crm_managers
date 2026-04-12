@@ -25,6 +25,7 @@ export default function InvoicesDashboard() {
         isViewOpen,
         setIsViewOpen,
         selectedInvoice,
+        openingBalance,
         totalRevenues,
         totalExpenses,
         netBalance,
@@ -45,6 +46,7 @@ export default function InvoicesDashboard() {
             {/* بطاقات الملخص */}
             {/* بطاقات الملخص الديناميكية */}
             <AnalycisInvoices
+                openingBalance={openingBalance}
                 netBalance={netBalance}
                 totalRevenues={totalRevenues}
                 totalExpenses={totalExpenses}

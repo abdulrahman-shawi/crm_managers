@@ -46,22 +46,22 @@ model Customer {
 }
 
 model Product {
-  id           Int           @id @default(autoincrement())
-  name         String
-  price        Float
-  priceLow     Float
-  stock        Int           @default(0)
-  categoryId   Int?
-  image        String?
-  createdAt    DateTime      @default(now()) @db.Timestamp(6)
-  modelNumber  String?       @db.VarChar(255)
-  userId       Int?
-  status       String?       @db.VarChar(20)
-  invoiceItems InvoiceItem[]
-  returnsAsReturned  Return[] @relation("ReturnedProduct")
-  returnsAsExchanged Return[] @relation("ExchangedProduct")
-  User         User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  category     Category?     @relation(fields: [categoryId], references: [id], onUpdate: NoAction, map: "fk_category")
+  id                 Int           @id @default(autoincrement())
+  name               String
+  price              Float
+  priceLow           Float
+  stock              Int           @default(0)
+  categoryId         Int?
+  image              String?
+  createdAt          DateTime      @default(now()) @db.Timestamp(6)
+  modelNumber        String?       @db.VarChar(255)
+  userId             Int?
+  status             String?       @db.VarChar(20)
+  invoiceItems       InvoiceItem[]
+  User               User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category           Category?     @relation(fields: [categoryId], references: [id], onUpdate: NoAction, map: "fk_category")
+  returnsAsExchanged Return[]      @relation("ExchangedProduct")
+  returnsAsReturned  Return[]      @relation("ReturnedProduct")
 }
 
 model Testimonial {
@@ -88,19 +88,23 @@ model Invoice {
 }
 
 model Return {
-  id                 String      @id @default(cuid())
+  id                 String     @id @default(cuid())
   type               ReturnType
-  quantity           Int         @default(1)
-  exchangedQuantity  Int?
-  priceDifference    Float       @default(0)
+  quantity           Int        @default(1)
+  priceDifference    Float      @default(0)
   note               String?
   invoiceId          String?
   returnedProductId  Int
   exchangedProductId Int?
-  createdAt          DateTime    @default(now()) @db.Timestamp(6)
-  invoice            Invoice?    @relation(fields: [invoiceId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  returnedProduct    Product     @relation("ReturnedProduct", fields: [returnedProductId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  exchangedProduct   Product?    @relation("ExchangedProduct", fields: [exchangedProductId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt          DateTime   @default(now()) @db.Timestamp(6)
+  exchangedQuantity  Int?
+  exchangedProduct   Product?   @relation("ExchangedProduct", fields: [exchangedProductId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invoice            Invoice?   @relation(fields: [invoiceId], references: [id], onUpdate: NoAction)
+  returnedProduct    Product    @relation("ReturnedProduct", fields: [returnedProductId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([exchangedProductId])
+  @@index([invoiceId])
+  @@index([returnedProductId])
 }
 
 model InvoiceItem {
@@ -139,13 +143,58 @@ model GeneralSettings {
   id               Int      @id @default(1)
   siteName         String   @default("متجري")
   currency         String   @default("EUR")
-  openingBalance   Float    @default(0)
   contactEmail     String?
   facebookUrl      String?
   instagramUrl     String?
   updatedAt        DateTime @default(now()) @db.Timestamp(6)
   logoUrl          String?
   selectedTemplate String   @default("modern")
+}
+
+model checkpoint_blobs {
+  thread_id     String
+  checkpoint_ns String @default("")
+  channel       String
+  version       String
+  type          String
+  blob          Bytes?
+
+  @@id([thread_id, checkpoint_ns, channel, version])
+}
+
+model checkpoint_migrations {
+  v Int @id
+}
+
+model checkpoint_writes {
+  thread_id     String
+  checkpoint_ns String  @default("")
+  checkpoint_id String
+  task_id       String
+  idx           Int
+  channel       String
+  type          String?
+  blob          Bytes
+
+  @@id([thread_id, checkpoint_ns, checkpoint_id, task_id, idx])
+}
+
+model checkpoints {
+  thread_id            String
+  checkpoint_ns        String  @default("")
+  checkpoint_id        String
+  parent_checkpoint_id String?
+  type                 String?
+  checkpoint           Json
+  metadata             Json    @default("{}")
+
+  @@id([thread_id, checkpoint_ns, checkpoint_id])
+}
+
+model n8n_chat_histories {
+  id         Int    @id @default(autoincrement())
+  session_id String @db.VarChar(255)
+  message    Json
 }
 
 enum Role {
@@ -168,3 +217,5 @@ enum ReturnType {
   REFUND
   EXCHANGE
 }
+
+
