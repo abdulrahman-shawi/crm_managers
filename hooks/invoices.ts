@@ -46,6 +46,13 @@ interface InvoiceReturnRaw {
   exchangedProduct?: { id: number; name: string } | null;
 }
 
+interface ReturnListEntry extends InvoiceReturnRaw {
+  invoice?: {
+    id: string;
+    customer?: { name?: string | null } | null;
+  } | null;
+}
+
 export interface ProductProfitRow {
   productId: number;
   productName: string;
@@ -161,11 +168,18 @@ export function useInvoices() {
         from: range.from,
         to: range.to,
       });
+      const filterFromDate = new Date(range.from);
+      const filterToDate = new Date(range.to);
+      filterToDate.setHours(23, 59, 59, 999);
 
-      const res = await fetch(`/api/dashboard/invoices?${params.toString()}`);
-      if (!res.ok) throw new Error("Fetch failed");
+      const [invoicesRes, returnsRes] = await Promise.all([
+        fetch(`/api/dashboard/invoices?${params.toString()}`),
+        fetch("/api/dashboard/returns", { cache: "no-store" }),
+      ]);
 
-      const data = await res.json();
+      if (!invoicesRes.ok || !returnsRes.ok) throw new Error("Fetch failed");
+
+      const [data, returnsData] = await Promise.all([invoicesRes.json(), returnsRes.json()]);
 
       const formattedInvoices = data.map((inv: any) => ({
         sortTime: new Date(inv.createdAt || inv.date).getTime(),
@@ -184,39 +198,40 @@ export function useInvoices() {
         } satisfies Invoice,
       }));
 
-      const formattedReturnDifferences = data.flatMap((inv: any) => {
-        const partyName = inv.customer?.name || "غير معروف";
-        const returnStatus: "مدفوعة" | "معلقة" = inv.status === "PENDING" ? "معلقة" : "مدفوعة";
+      const formattedReturnDifferences = (returnsData as ReturnListEntry[])
+        .filter((ret) => {
+          const difference = Number(ret?.priceDifference || 0);
+          if (difference === 0) return false;
 
-        return (inv.returns || [])
-          .filter((ret: any) => Number(ret?.priceDifference || 0) !== 0)
-          .map((ret: any) => {
-            const difference = Number(ret.priceDifference || 0);
-            const returnedName = ret.returnedProduct?.name || "منتج مرتجع";
-            const exchangedName = ret.exchangedProduct?.name || "-";
-            const isRevenue = difference > 0;
+          const createdAt = new Date(ret.createdAt);
+          return createdAt >= filterFromDate && createdAt <= filterToDate;
+        })
+        .map((ret) => {
+          const difference = Number(ret.priceDifference || 0);
+          const returnedName = ret.returnedProduct?.name || "منتج مرتجع";
+          const exchangedName = ret.exchangedProduct?.name || "-";
+          const isRevenue = difference > 0;
 
-            return {
-              sortTime: new Date(ret.createdAt || inv.date).getTime(),
-              invoice: {
-                id: `${inv.id}-return-${ret.id}`,
-                party: partyName,
-                category:
-                  ret.type === "EXCHANGE"
-                    ? `فرق تبديل: ${returnedName} -> ${exchangedName}`
-                    : `فرق ترجيع: ${returnedName}`,
-                amount: Math.abs(difference),
-                date: new Date(ret.createdAt || inv.date).toLocaleDateString("ar-EG"),
-                status: returnStatus,
-                type: isRevenue ? "REVENUE" : "EXPENSE",
-                sourceKind: "RETURN_DIFFERENCE",
-                sourceLabel: isRevenue ? "فرق سعر موجب" : "فرق سعر سالب",
-                rawItems: [],
-                rawReturns: [ret],
-              } satisfies Invoice,
-            };
-          });
-      });
+          return {
+            sortTime: new Date(ret.createdAt).getTime(),
+            invoice: {
+              id: ret.invoice?.id ? `${ret.invoice.id}-return-${ret.id}` : `return-${ret.id}`,
+              party: ret.invoice?.customer?.name || "غير معروف",
+              category:
+                ret.type === "EXCHANGE"
+                  ? `فرق تبديل: ${returnedName} -> ${exchangedName}`
+                  : `فرق ترجيع: ${returnedName}`,
+              amount: Math.abs(difference),
+              date: new Date(ret.createdAt).toLocaleDateString("ar-EG"),
+              status: "مدفوعة",
+              type: isRevenue ? "REVENUE" : "EXPENSE",
+              sourceKind: "RETURN_DIFFERENCE",
+              sourceLabel: isRevenue ? "فرق سعر موجب" : "فرق سعر سالب",
+              rawItems: [],
+              rawReturns: [ret],
+            } satisfies Invoice,
+          };
+        });
 
       const formatted = [...formattedInvoices, ...formattedReturnDifferences]
         .sort((a, b) => b.sortTime - a.sortTime)
