@@ -24,8 +24,10 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const status = formData.get("status") as string;
     const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
     const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
-    const normalizedPrice = inputCurrency === "USD" ? parseFloat(price) * exchangeRate : parseFloat(price);
-    const normalizedWholesalePrice = inputCurrency === "USD" ? parseFloat(priceLow) * exchangeRate : parseFloat(priceLow);
+    const sourcePrice = parseFloat(price);
+    const sourcePriceLow = parseFloat(priceLow);
+    const normalizedPrice = inputCurrency === "USD" ? sourcePrice * exchangeRate : sourcePrice;
+    const normalizedWholesalePrice = inputCurrency === "USD" ? sourcePriceLow * exchangeRate : sourcePriceLow;
 
     let imagePath = undefined;
 
@@ -47,7 +49,10 @@ export async function PUT(request: NextRequest, { params }: Props) {
       data: {
         name,
         price: normalizedPrice,
+        sourcePrice,
         priceLow: normalizedWholesalePrice,
+        sourcePriceLow,
+        pricingCurrency: inputCurrency === "USD" ? "USD" : "SAR",
         stock: parseInt(stock),
         modelNumber:modelNumber,
         status: status || undefined,

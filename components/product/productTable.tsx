@@ -34,7 +34,7 @@ const ProductTable: React.FunctionComponent<IProductTableProps> = (props) => {
                 <th className="px-6 py-4">الصورة</th>
                 <th className="px-6 py-4">المنتج</th>
                 <th className="px-6 py-4">القسم</th>
-                <th className="px-6 py-4">السعر</th>
+                <th className="px-6 py-4">السعر الأصلي / المحسوب</th>
                 <th className="px-6 py-4">المخزون</th>
                 <th className="px-6 py-4 text-left">الإجراءات</th>
               </tr>
@@ -66,7 +66,16 @@ const ProductTable: React.FunctionComponent<IProductTableProps> = (props) => {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-500 text-sm">{product.category?.name || "بدون قسم"}</td>
-                      <td className="px-6 py-4 font-bold text-blue-600">{Number(product.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ل.س</td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1">
+                          <span className={`font-bold ${product.pricingCurrency === 'USD' ? 'text-emerald-600' : 'text-slate-700 dark:text-slate-200'}`}>
+                            {Number(product.sourcePrice ?? product.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {product.pricingCurrency === 'USD' ? '$' : 'ل.س'}
+                          </span>
+                          <span className="text-xs font-bold text-blue-600">
+                            {Number(product.price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ل.س
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-6 py-4">
                         <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${product.stock > 0 ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20' : 'bg-red-50 text-red-600 dark:bg-red-900/20'}`}>
                           {product.stock > 0 ? `في المخزن (${product.stock})` : "نفذت الكمية"}

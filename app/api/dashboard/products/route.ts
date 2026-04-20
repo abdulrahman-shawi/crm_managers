@@ -44,8 +44,10 @@ export async function POST(request: Request) {
     const userid = formData.get("userid") as string;
     const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
     const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
-    const normalizedPrice = inputCurrency === "USD" ? parseFloat(price) * exchangeRate : parseFloat(price);
-    const normalizedWholesalePrice = inputCurrency === "USD" ? parseFloat(priceLow) * exchangeRate : parseFloat(priceLow);
+    const sourcePrice = parseFloat(price);
+    const sourcePriceLow = parseFloat(priceLow);
+    const normalizedPrice = inputCurrency === "USD" ? sourcePrice * exchangeRate : sourcePrice;
+    const normalizedWholesalePrice = inputCurrency === "USD" ? sourcePriceLow * exchangeRate : sourcePriceLow;
     // 1. فحص البيانات الأساسية
     if (!name || !price) {
       return NextResponse.json({
@@ -76,11 +78,14 @@ export async function POST(request: Request) {
       data: {
         name: name,
         price: normalizedPrice,
+        sourcePrice,
         stock: stock ? parseInt(stock) : 0,
         image: imageUrl, // الحقل الذي أضفناه للسكيما
         // تحويل categoryId لرقم فقط إذا كان موجوداً
         categoryId: parseInt(categoryId),
         priceLow: normalizedWholesalePrice,
+        sourcePriceLow,
+        pricingCurrency: inputCurrency === "USD" ? "USD" : "SAR",
         modelNumber: modelNumber || null,
         status: status || 'available', // القيمة الافتراضية
         userId: parseInt(userid), // الحقل الذي يربط المنتج بالمستخدم

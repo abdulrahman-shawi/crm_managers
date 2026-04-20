@@ -6,11 +6,14 @@ export interface Product {
     id: number;
     name: string;
     price: number;
+    sourcePrice: number;
     stock: number;
     image: string | null;
     categoryId: number;
     createdAt: string;
     priceLow: number;
+    sourcePriceLow: number;
+    pricingCurrency: ProductEntryCurrency;
     // الحقول الجديدة
     modelNumber: string;
     status: 'avilable' | 'unavilable' | 'instock';
@@ -166,10 +169,10 @@ export function useProductForm(onSuccess: () => void) {
             id: product.id,
             name: product.name,
             categoryId: String(product.categoryId),
-            price: String(product.price),
+            price: String(product.sourcePrice ?? product.price),
             stock: String(product.stock),
-            priceLow: String(product.priceLow),
-            inputCurrency: "SAR",
+            priceLow: String(product.sourcePriceLow ?? product.priceLow),
+            inputCurrency: product.pricingCurrency || "SAR",
             // تعبئة البيانات الجديدة عند التعديل
             modelNumber: product.modelNumber || "",
             status: product.status || "avilable",
