@@ -7,7 +7,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
 
     // حساب القيم المالية بناءً على بياناتك
     const subtotal = Number(invoice.amount) || 0;
-    const isReturnDifference = invoice.sourceKind === "RETURN_DIFFERENCE";
+    const isReturnDifference = invoice.sourceKind === "RETURN_ENTRY";
 
     const getProductName = (productId: any) => {
         const product = products?.find((p: any) => p.id === productId);
@@ -41,8 +41,8 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                 <h1 className="text-4xl font-black text-blue-600 mb-2 italic tracking-tighter">
                                     {isReturnDifference
                                         ? invoice.type === "REVENUE"
-                                            ? "قيد مقبوضات من فرق مرتجع"
-                                            : "قيد مدفوعات من فرق مرتجع"
+                                            ? "فاتورة مرتجع"
+                                            : "فاتورة تبديل"
                                         : invoice.type === "REVENUE"
                                             ? "فاتورة مبيعات"
                                             : "فاتورة مشتريات"}

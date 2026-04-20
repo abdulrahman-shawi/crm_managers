@@ -13,7 +13,7 @@ export interface Invoice {
   date: string;
   status: "مدفوعة" | "معلقة";
   type: "REVENUE" | "EXPENSE";
-  sourceKind?: "INVOICE" | "RETURN_DIFFERENCE";
+  sourceKind?: "INVOICE" | "RETURN_ENTRY";
   sourceLabel?: string;
   rawItems?: InvoiceItemRaw[];
   rawReturns?: InvoiceReturnRaw[];
@@ -200,9 +200,6 @@ export function useInvoices() {
 
       const formattedReturnDifferences = (returnsData as ReturnListEntry[])
         .filter((ret) => {
-          const difference = Number(ret?.priceDifference || 0);
-          if (difference === 0) return false;
-
           const createdAt = new Date(ret.createdAt);
           return createdAt >= filterFromDate && createdAt <= filterToDate;
         })
@@ -219,13 +216,13 @@ export function useInvoices() {
               party: ret.invoice?.customer?.name || "غير معروف",
               category:
                 ret.type === "EXCHANGE"
-                  ? `فرق تبديل: ${returnedName} -> ${exchangedName}`
-                  : `فرق ترجيع: ${returnedName}`,
+                  ? `تبديل: ${returnedName} -> ${exchangedName}`
+                  : `مرتجع: ${returnedName}`,
               amount: Math.abs(difference),
               date: new Date(ret.createdAt).toLocaleDateString("ar-EG"),
               status: "مدفوعة",
               type: isRevenue ? "REVENUE" : "EXPENSE",
-              sourceKind: "RETURN_DIFFERENCE",
+              sourceKind: "RETURN_ENTRY",
               sourceLabel: ret.type === "REFUND" ? "مرتجع" : "تبديل",
               rawItems: [],
               rawReturns: [ret],
