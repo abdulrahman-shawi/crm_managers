@@ -25,6 +25,7 @@ export default function InvoicesTable({invoices} : any) {
                         <tr>
                             <th className="px-8 py-5">الرقم المرجعي</th>
                             <th className="px-8 py-5">{activeTab === "revenue" ? "العميل" : "المورد"}</th>
+                            <th className="px-8 py-5">البيان</th>
                             <th className="px-8 py-5">الحالة</th>
                             <th className="px-8 py-5">المبلغ الكلي</th>
                             <th className="px-8 py-5 text-left">الإجراءات</th>
@@ -34,12 +35,12 @@ export default function InvoicesTable({invoices} : any) {
                         {/* حالة التحميل */}
                         {isLoading ? (
                             <tr>
-                                <td colSpan={5} className="text-center py-10 text-slate-400">جاري تحميل البيانات...</td>
+                                <td colSpan={6} className="text-center py-10 text-slate-400">جاري تحميل البيانات...</td>
                             </tr>
                         ) : (activeTab === "revenue" ? revenues : expenses).length === 0 ? (
                             /* حالة عدم وجود بيانات */
                             <tr>
-                                <td colSpan={5} className="text-center py-10 text-slate-400">لا توجد فواتير لعرضها</td>
+                                <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد فواتير لعرضها</td>
                             </tr>
                         ) : (
                             /* عرض البيانات */
@@ -47,6 +48,7 @@ export default function InvoicesTable({invoices} : any) {
                                 <tr key={item.id} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-8 py-5 font-mono text-sm font-bold text-blue-600">{item.id}</td>
                                     <td className="px-8 py-5 font-bold">{item.party}</td>
+                                    <td className="px-8 py-5 text-sm font-bold text-slate-600">{item.category}</td>
                                     <td className="px-8 py-5">
                                         <span className={`px-3 py-1 rounded-full text-[10px] font-black ${getStatusStyle(item.status)}`}>
                                             {item.status}

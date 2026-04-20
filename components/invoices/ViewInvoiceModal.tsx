@@ -7,6 +7,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
 
     // حساب القيم المالية بناءً على بياناتك
     const subtotal = Number(invoice.amount) || 0;
+    const isReturnDifference = invoice.sourceKind === "RETURN_DIFFERENCE";
 
     const getProductName = (productId: any) => {
         const product = products?.find((p: any) => p.id === productId);
@@ -38,7 +39,13 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                         <div className="flex justify-between items-start mb-12 border-b-2 border-slate-100 pb-10">
                             <div>
                                 <h1 className="text-4xl font-black text-blue-600 mb-2 italic tracking-tighter">
-                                    {invoice.type === "REVENUE" ? "فاتورة مبيعات" : "فاتورة مشتريات"}
+                                    {isReturnDifference
+                                        ? invoice.type === "REVENUE"
+                                            ? "قيد مقبوضات من فرق مرتجع"
+                                            : "قيد مدفوعات من فرق مرتجع"
+                                        : invoice.type === "REVENUE"
+                                            ? "فاتورة مبيعات"
+                                            : "فاتورة مشتريات"}
                                 </h1>
                                 <p className="text-slate-500 font-bold">رقم المرجع: <span className="font-mono text-slate-900">#{invoice.id.slice(-8)}</span></p>
                                 <p className="text-slate-500 font-bold">التاريخ: <span className="text-slate-900">{invoice.date}</span></p>
@@ -72,7 +79,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {invoice.rawItems && invoice.rawItems.length > 0 ? (
+                                {!isReturnDifference && invoice.rawItems && invoice.rawItems.length > 0 ? (
                                     invoice.rawItems.map((item: any, idx: number) => (
                                         <tr key={idx} className="border-b border-slate-100">
                                             <td className="px-6 py-6 font-bold text-slate-700">
@@ -82,6 +89,19 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                             <td className="px-6 py-6 text-center font-bold">{item.quantity}</td>
                                             <td className="px-6 py-6 text-center text-slate-500">ل.س{item.unitPrice.toLocaleString()}</td>
                                             <td className="px-6 py-6 text-left font-black italic">ل.س{item.subTotal.toLocaleString()}</td>
+                                        </tr>
+                                    ))
+                                ) : isReturnDifference && invoice.rawReturns && invoice.rawReturns.length > 0 ? (
+                                    invoice.rawReturns.map((ret: any) => (
+                                        <tr key={ret.id} className="border-b border-slate-100">
+                                            <td className="px-6 py-6 font-bold text-slate-700">
+                                                {ret.type === "EXCHANGE"
+                                                    ? `${ret.returnedProduct?.name || "-"} -> ${ret.exchangedProduct?.name || "-"}`
+                                                    : ret.returnedProduct?.name || "-"}
+                                            </td>
+                                            <td className="px-6 py-6 text-center font-bold">{ret.quantity}</td>
+                                            <td className="px-6 py-6 text-center text-slate-500">ل.س{Math.abs(Number(ret.priceDifference || 0)).toLocaleString()}</td>
+                                            <td className="px-6 py-6 text-left font-black italic">ل.س{Math.abs(Number(ret.priceDifference || 0)).toLocaleString()}</td>
                                         </tr>
                                     ))
                                 ) : (
