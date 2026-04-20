@@ -17,9 +17,15 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const price = formData.get("price") as string;
     const stock = formData.get("stock") as string;
     const priceLow = formData.get("priceLow") as string;
+    const inputCurrency = (formData.get("inputCurrency") as string) || "SAR";
     const modelNumber = formData.get("modelNumber") as string;
     const categoryId = formData.get("categoryId") as string;
     const file = formData.get("file") as File | null;
+    const status = formData.get("status") as string;
+    const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
+    const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
+    const normalizedPrice = inputCurrency === "USD" ? parseFloat(price) * exchangeRate : parseFloat(price);
+    const normalizedWholesalePrice = inputCurrency === "USD" ? parseFloat(priceLow) * exchangeRate : parseFloat(priceLow);
 
     let imagePath = undefined;
 
@@ -40,10 +46,11 @@ export async function PUT(request: NextRequest, { params }: Props) {
       where: { id: Number(id) },
       data: {
         name,
-        price: parseFloat(price),
-        priceLow:parseFloat(priceLow),
+        price: normalizedPrice,
+        priceLow: normalizedWholesalePrice,
         stock: parseInt(stock),
         modelNumber:modelNumber,
+        status: status || undefined,
         categoryId: Number(categoryId),
         ...(imagePath && { image: imagePath }), // تحديث الصورة فقط إذا تم رفع ملف جديد
       },

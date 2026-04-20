@@ -138,7 +138,8 @@ model PageSeo {
 model GeneralSettings {
   id               Int      @id @default(1)
   siteName         String   @default("متجري")
-  currency         String   @default("EUR")
+  currency         String   @default("SAR")
+  exchangeRate     Float    @default(1)
   openingBalance   Float    @default(0)
   contactEmail     String?
   facebookUrl      String?
@@ -146,6 +147,52 @@ model GeneralSettings {
   updatedAt        DateTime @default(now()) @db.Timestamp(6)
   logoUrl          String?
   selectedTemplate String   @default("modern")
+}
+
+model checkpoint_blobs {
+  thread_id     String
+  checkpoint_ns String @default("")
+  channel       String
+  version       String
+  type          String
+  blob          Bytes?
+
+  @@id([thread_id, checkpoint_ns, channel, version])
+}
+
+model checkpoint_migrations {
+  v Int @id
+}
+
+model checkpoint_writes {
+  thread_id     String
+  checkpoint_ns String  @default("")
+  checkpoint_id String
+  task_id       String
+  idx           Int
+  channel       String
+  type          String?
+  blob          Bytes
+
+  @@id([thread_id, checkpoint_ns, checkpoint_id, task_id, idx])
+}
+
+model checkpoints {
+  thread_id            String
+  checkpoint_ns        String  @default("")
+  checkpoint_id        String
+  parent_checkpoint_id String?
+  type                 String?
+  checkpoint           Json
+  metadata             Json    @default("{}")
+
+  @@id([thread_id, checkpoint_ns, checkpoint_id])
+}
+
+model n8n_chat_histories {
+  id         Int    @id @default(autoincrement())
+  session_id String @db.VarChar(255)
+  message    Json
 }
 
 enum Role {

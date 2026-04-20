@@ -21,6 +21,8 @@ export interface Product {
     };
 }
 
+type ProductEntryCurrency = "SAR" | "USD";
+
 export function useProductForm(onSuccess: () => void) {
     const { user } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +37,8 @@ export function useProductForm(onSuccess: () => void) {
     const [toastType, setToastType] = useState<"add" | "delete" | "edit" | null>(null);
     const [currentProductId, setCurrentProductId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [exchangeRate, setExchangeRate] = useState(1);
+    const [defaultCurrency, setDefaultCurrency] = useState<ProductEntryCurrency>("SAR");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
         const filteredProducts = useMemo(() => {
@@ -71,6 +75,7 @@ export function useProductForm(onSuccess: () => void) {
         price: "",
         stock: "",
         priceLow: "",
+        inputCurrency: "SAR" as ProductEntryCurrency,
         // الحقول الجديدة في الحالة الأولية
         modelNumber: "",
         status: "avilable",
@@ -86,6 +91,25 @@ export function useProductForm(onSuccess: () => void) {
 
         } catch (error) {
             console.error("Error fetching products:", error);
+        }
+    };
+
+    const fetchGeneralSettings = async () => {
+        try {
+            const res = await axios.get("/api/dashboard/general-settings", {
+                headers: { "Cache-Control": "no-store" }
+            });
+
+            setExchangeRate(Number(res.data?.exchangeRate ?? 1) || 1);
+            setDefaultCurrency(res.data?.currency === "USD" ? "USD" : "SAR");
+            setFormData((prev) => ({
+                ...prev,
+                inputCurrency: res.data?.currency === "USD" ? "USD" : "SAR",
+            }));
+        } catch (error) {
+            console.error("Error fetching general settings:", error);
+            setExchangeRate(1);
+            setDefaultCurrency("SAR");
         }
     };
     const fetchProductslow = async () => {
@@ -109,6 +133,7 @@ export function useProductForm(onSuccess: () => void) {
     useEffect(() => {
         fetchProducts();
         fetchProductslow();
+        fetchGeneralSettings();
     }, []);
 
     const showToast = (type: "add" | "delete" | "edit") => {
@@ -126,7 +151,7 @@ export function useProductForm(onSuccess: () => void) {
     };
 
     const resetForm = () => {
-        setFormData(initialData);
+        setFormData({ ...initialData, inputCurrency: defaultCurrency });
         setFile(null);
         setSelectedImage(null);
         setIsEditing(false);
@@ -144,6 +169,7 @@ export function useProductForm(onSuccess: () => void) {
             price: String(product.price),
             stock: String(product.stock),
             priceLow: String(product.priceLow),
+            inputCurrency: "SAR",
             // تعبئة البيانات الجديدة عند التعديل
             modelNumber: product.modelNumber || "",
             status: product.status || "avilable",
@@ -170,6 +196,7 @@ export function useProductForm(onSuccess: () => void) {
         data.append("price", formData.price);
         data.append("stock", formData.stock);
         data.append("priceLow", formData.priceLow);
+        data.append("inputCurrency", formData.inputCurrency);
 
         // إرسال البيانات الجديدة
         data.append("modelNumber", formData.modelNumber);
@@ -261,6 +288,9 @@ export function useProductForm(onSuccess: () => void) {
         indexOfFirstItem,
         indexOfLastItem,
         handleViewProduct
+
+        ,exchangeRate,
+        defaultCurrency
 
     };
 }

@@ -4,7 +4,7 @@
 import React, { useState } from "react";
 import { 
   Info, Mail, Share2, Shield, 
-  Save, Loader2, Wallet, Facebook, Instagram 
+  Save, Loader2, Wallet, Facebook, Instagram, BadgeDollarSign
 } from "lucide-react";
 import { updateSettingsAction } from "@/actions/settings"; // تأكد من إنشاء هذا الملف
 
@@ -48,13 +48,30 @@ export default function SettingsForm({ initialData }: { initialData: any }) {
               <label className="text-sm font-medium dark:text-slate-300">العملة الافتراضية</label>
               <select 
                 name="currency"
-                defaultValue={initialData?.currency || "EUR"}
+                defaultValue={initialData?.currency || "SAR"}
                 className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
               >
-                <option value="EUR">EUR (€)</option>
-                <option value="USD">USD ($)</option>
-                <option value="SAR">SYR (ل.س)</option>
+                <option value="SAR">الليرة السورية (ل.س)</option>
+                <option value="USD">الدولار الأمريكي ($)</option>
+                <option value="EUR">اليورو (€)</option>
               </select>
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm font-medium dark:text-slate-300 flex items-center gap-2">
+                <BadgeDollarSign size={16} className="text-slate-400" /> سعر صرف الدولار
+              </label>
+              <input
+                name="exchangeRate"
+                type="number"
+                step="0.01"
+                min="0.01"
+                defaultValue={initialData?.exchangeRate ?? 1}
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 rounded-2xl dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                placeholder="مثال: 15000"
+              />
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                يستخدم هذا السعر لتحويل أسعار المنتجات المُدخلة بالدولار إلى الليرة السورية عند الحفظ.
+              </p>
             </div>
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-medium dark:text-slate-300 flex items-center gap-2">

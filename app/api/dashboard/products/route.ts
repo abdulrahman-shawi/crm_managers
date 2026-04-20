@@ -36,11 +36,16 @@ export async function POST(request: Request) {
     const name = formData.get("name") as string;
     const price = formData.get("price") as string;
     const priceLow = formData.get("priceLow") as string;
+    const inputCurrency = (formData.get("inputCurrency") as string) || "SAR";
     const stock = formData.get("stock") as string;
     const categoryId = formData.get("categoryId") as string;
     const modelNumber = formData.get("modelNumber") as string;
     const status = formData.get("status") as string;
     const userid = formData.get("userid") as string;
+    const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
+    const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
+    const normalizedPrice = inputCurrency === "USD" ? parseFloat(price) * exchangeRate : parseFloat(price);
+    const normalizedWholesalePrice = inputCurrency === "USD" ? parseFloat(priceLow) * exchangeRate : parseFloat(priceLow);
     // 1. فحص البيانات الأساسية
     if (!name || !price) {
       return NextResponse.json({
@@ -70,12 +75,12 @@ export async function POST(request: Request) {
     const product = await prisma.product.create({
       data: {
         name: name,
-        price: parseFloat(price),
+        price: normalizedPrice,
         stock: stock ? parseInt(stock) : 0,
         image: imageUrl, // الحقل الذي أضفناه للسكيما
         // تحويل categoryId لرقم فقط إذا كان موجوداً
         categoryId: parseInt(categoryId),
-        priceLow: parseFloat(priceLow),
+        priceLow: normalizedWholesalePrice,
         modelNumber: modelNumber || null,
         status: status || 'available', // القيمة الافتراضية
         userId: parseInt(userid), // الحقل الذي يربط المنتج بالمستخدم

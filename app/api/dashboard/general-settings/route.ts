@@ -9,6 +9,7 @@ export async function GET() {
     return NextResponse.json(
       {
         openingBalance: Number(settings?.openingBalance ?? 0),
+        exchangeRate: Number(settings?.exchangeRate ?? 1),
         currency: settings?.currency ?? "SAR",
         siteName: settings?.siteName ?? "",
       },

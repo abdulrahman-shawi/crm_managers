@@ -10,6 +10,8 @@ export async function updateSettingsAction(formData: FormData) {
   // استخراج كافة الحقول من الفورم
   const siteName = formData.get("siteName") as string;
   const currency = formData.get("currency") as string;
+  const exchangeRateValue = Number(formData.get("exchangeRate") ?? 1);
+  const exchangeRate = Number.isFinite(exchangeRateValue) && exchangeRateValue > 0 ? exchangeRateValue : 1;
   const openingBalanceValue = Number(formData.get("openingBalance") ?? 0);
   const openingBalance = Number.isFinite(openingBalanceValue) ? openingBalanceValue : 0;
   const contactEmail = formData.get("contactEmail") as string;
@@ -23,6 +25,7 @@ export async function updateSettingsAction(formData: FormData) {
       update: {
         siteName,
         currency,
+        exchangeRate,
         openingBalance,
         contactEmail,
         facebookUrl,
@@ -32,6 +35,7 @@ export async function updateSettingsAction(formData: FormData) {
         id: 1,
         siteName,
         currency,
+        exchangeRate,
         openingBalance,
         contactEmail,
         facebookUrl,

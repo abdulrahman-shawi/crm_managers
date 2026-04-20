@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Package, Tag, Euro, Database, Image as ImageIcon, CheckCircle2, Loader2, Hash, Activity } from "lucide-react";
+import { X, Package, Tag, Euro, Database, Image as ImageIcon, CheckCircle2, Loader2, Hash, Activity, DollarSign } from "lucide-react";
 import axios from "axios";
 import { useProductForm } from "@/hooks/products";
 
@@ -9,8 +9,14 @@ export const AddProductModal = ({ isOpen, onClose, oncloseLow , categories, prod
 
     const {
         formData, setFormData, fileInputRef, selectedImage,
-        loading, handleFileChange, handleSubmit, isEditing , productslow
+        loading, handleFileChange, handleSubmit, isEditing , productslow, exchangeRate
     } = productForm;
+
+    const currentRate = Number(exchangeRate || 1);
+    const entryPrice = Number(formData.price || 0);
+    const entryWholesalePrice = Number(formData.priceLow || 0);
+    const previewRetailInSar = formData.inputCurrency === "USD" ? entryPrice * currentRate : entryPrice;
+    const previewWholesaleInSar = formData.inputCurrency === "USD" ? entryWholesalePrice * currentRate : entryWholesalePrice;
 
     return (
         <AnimatePresence>
@@ -83,6 +89,18 @@ export const AddProductModal = ({ isOpen, onClose, oncloseLow , categories, prod
                                     </div>
                                 </div>
 
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold">عملة الإدخال</label>
+                                    <div className="relative">
+                                        <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                        <select value={formData.inputCurrency} onChange={(e) => setFormData({ ...formData, inputCurrency: e.target.value })} className="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 appearance-none">
+                                            <option value="SAR">ليرة سورية (ل.س)</option>
+                                            <option value="USD">دولار أمريكي ($)</option>
+                                        </select>
+                                    </div>
+                                    <p className="text-xs text-slate-500">سعر الصرف الحالي: 1$ = {currentRate.toLocaleString()} ل.س</p>
+                                </div>
+
                                 {/* السعر */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold">السعر المفرق</label>
@@ -90,6 +108,7 @@ export const AddProductModal = ({ isOpen, onClose, oncloseLow , categories, prod
                                         <Euro className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                         <input required type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                     </div>
+                                    <p className="text-xs text-slate-500">سيُحفظ بالسوري: {previewRetailInSar.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ل.س</p>
                                 </div>
 
                                 {/* السعر الجملة */}
@@ -99,6 +118,7 @@ export const AddProductModal = ({ isOpen, onClose, oncloseLow , categories, prod
                                         <Euro className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                                         <input required type="number" value={formData.priceLow} onChange={(e) => setFormData({ ...formData, priceLow: e.target.value })} className="w-full pr-10 pl-4 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00" />
                                     </div>
+                                    <p className="text-xs text-slate-500">سيُحفظ بالسوري: {previewWholesaleInSar.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ل.س</p>
                                 </div>
 
                                 {/* المخزون */}
