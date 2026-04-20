@@ -210,7 +210,7 @@ export function useInvoices() {
           const difference = Number(ret.priceDifference || 0);
           const returnedName = ret.returnedProduct?.name || "منتج مرتجع";
           const exchangedName = ret.exchangedProduct?.name || "-";
-          const isRevenue = difference > 0;
+          const isRevenue = ret.type === "REFUND";
 
           return {
             sortTime: new Date(ret.createdAt).getTime(),
@@ -226,7 +226,7 @@ export function useInvoices() {
               status: "مدفوعة",
               type: isRevenue ? "REVENUE" : "EXPENSE",
               sourceKind: "RETURN_DIFFERENCE",
-              sourceLabel: isRevenue ? "فرق سعر موجب" : "فرق سعر سالب",
+              sourceLabel: ret.type === "REFUND" ? "مرتجع" : "تبديل",
               rawItems: [],
               rawReturns: [ret],
             } satisfies Invoice,
