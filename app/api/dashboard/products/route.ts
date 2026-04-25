@@ -1,14 +1,24 @@
 import { prisma } from "@/lib/prisma";
+import { applyComputedProductPrices, normalizeExchangeRate } from "@/lib/pricing";
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 
 export async function GET(request: NextRequest) {
   try {
-    const products = await prisma.product.findMany({
-      include: { category: true },
-      orderBy: { id: 'asc' }
-    });
-    return new Response(JSON.stringify(products), {
+    const [products, settings] = await Promise.all([
+      prisma.product.findMany({
+        include: { category: true },
+        orderBy: { id: 'asc' }
+      }),
+      prisma.generalSettings.findUnique({
+        where: { id: 1 },
+        select: { exchangeRate: true },
+      }),
+    ]);
+    const exchangeRate = normalizeExchangeRate(settings?.exchangeRate);
+    const computedProducts = products.map((product) => applyComputedProductPrices(product, exchangeRate));
+
+    return new Response(JSON.stringify(computedProducts), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +53,7 @@ export async function POST(request: Request) {
     const status = formData.get("status") as string;
     const userid = formData.get("userid") as string;
     const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
-    const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
+    const exchangeRate = normalizeExchangeRate(settings?.exchangeRate);
     const sourcePrice = parseFloat(price);
     const sourcePriceLow = parseFloat(priceLow);
     const normalizedPrice = inputCurrency === "USD" ? sourcePrice * exchangeRate : sourcePrice;

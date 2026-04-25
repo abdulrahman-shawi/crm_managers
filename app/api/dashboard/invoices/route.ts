@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import {
+    applyComputedProductPrices,
+    getComputedInvoiceItemTotals,
+    normalizeExchangeRate,
+} from "@/lib/pricing";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -23,7 +28,8 @@ export async function GET(request: Request) {
             );
         }
 
-        const invoices = await prisma.invoice.findMany({
+        const [invoices, settings] = await Promise.all([
+            prisma.invoice.findMany({
             where: {
                 date: {
                     gte: fromDate,
@@ -41,6 +47,9 @@ export async function GET(request: Request) {
                                 modelNumber: true,
                                 priceLow: true,
                                 price: true,
+                                sourcePrice: true,
+                                sourcePriceLow: true,
+                                pricingCurrency: true,
                             },
                         },
                     },
@@ -60,8 +69,47 @@ export async function GET(request: Request) {
             orderBy: {
                 createdAt: "desc"
             }
+        }),
+            prisma.generalSettings.findUnique({
+                where: { id: 1 },
+                select: { exchangeRate: true },
+            }),
+        ]);
+
+        const exchangeRate = normalizeExchangeRate(settings?.exchangeRate);
+        const invoicesWithComputedPrices = invoices.map((invoice) => {
+            const computedItems = invoice.items.map((item) => {
+                const product = item.product
+                    ? applyComputedProductPrices(item.product, exchangeRate)
+                    : item.product;
+                const { unitPrice, subTotal } = getComputedInvoiceItemTotals(
+                    {
+                        quantity: item.quantity,
+                        discount: item.discount,
+                        unitPrice: item.unitPrice,
+                        product,
+                    },
+                    exchangeRate
+                );
+
+                return {
+                    ...item,
+                    unitPrice,
+                    subTotal,
+                    product,
+                };
+            });
+
+            const totalAmount = computedItems.reduce((sum, item) => sum + Number(item.subTotal || 0), 0);
+
+            return {
+                ...invoice,
+                items: computedItems,
+                totalAmount,
+            };
         });
-        return NextResponse.json(invoices, { status: 200 });
+
+        return NextResponse.json(invoicesWithComputedPrices, { status: 200 });
     } catch (error: any) {
         console.error("Prisma Error Details:", error);
         return NextResponse.json(

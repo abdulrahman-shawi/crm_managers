@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { applyComputedProductPrices, normalizeExchangeRate } from "@/lib/pricing";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
@@ -23,7 +24,7 @@ export async function PUT(request: NextRequest, { params }: Props) {
     const file = formData.get("file") as File | null;
     const status = formData.get("status") as string;
     const settings = await prisma.generalSettings.findUnique({ where: { id: 1 } });
-    const exchangeRate = Number(settings?.exchangeRate ?? 1) > 0 ? Number(settings?.exchangeRate ?? 1) : 1;
+    const exchangeRate = normalizeExchangeRate(settings?.exchangeRate);
     const sourcePrice = parseFloat(price);
     const sourcePriceLow = parseFloat(priceLow);
     const normalizedPrice = inputCurrency === "USD" ? sourcePrice * exchangeRate : sourcePrice;
@@ -74,16 +75,22 @@ export async function PUT(request: NextRequest, { params }: Props) {
 
 // دالة GET كما هي مع تحسين بسيط
 export async function GET(request: NextRequest, { params }: Props) {
-  const product = await prisma.product.findUnique({
-    where: { id: Number(params.id) },
-    include: { category: true }
-  });
+  const [product, settings] = await Promise.all([
+    prisma.product.findUnique({
+      where: { id: Number(params.id) },
+      include: { category: true }
+    }),
+    prisma.generalSettings.findUnique({
+      where: { id: 1 },
+      select: { exchangeRate: true },
+    }),
+  ]);
   
   if (!product) {
     return NextResponse.json({ message: "المنتج غير موجود" }, { status: 404 });
   }
 
-  return NextResponse.json(product);
+  return NextResponse.json(applyComputedProductPrices(product, normalizeExchangeRate(settings?.exchangeRate)));
 }
 
 export async function DELETE(request: NextRequest, { params }: Props) {
