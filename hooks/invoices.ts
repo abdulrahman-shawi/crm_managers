@@ -328,7 +328,7 @@ export function useInvoices() {
         item.productId = value;
         item.name = product?.name || "";
         item.modelNumber = product?.modelNumber || "";
-        item.price = product?.price || 0;
+        item.price = Math.round(Number(product?.price ?? 0));
 
         setSearchQueries((prev) => ({ ...prev, [index]: item.name }));
         setShowDropdown((prev) => ({ ...prev, [index]: false }));
