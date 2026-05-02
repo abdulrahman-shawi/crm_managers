@@ -144,6 +144,8 @@ model GeneralSettings {
   currency         String   @default("SAR")
   exchangeRate     Float    @default(1)
   openingBalance   Float    @default(0)
+  openingBalanceLastModified DateTime?
+  openingBalanceLastAutoUpdated DateTime?
   contactEmail     String?
   facebookUrl      String?
   instagramUrl     String?

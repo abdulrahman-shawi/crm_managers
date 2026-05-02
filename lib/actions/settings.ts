@@ -22,6 +22,7 @@ export async function updateSettingsAction(formData: FormData) {
         currency,
         exchangeRate,
         openingBalance,
+        openingBalanceLastModified: new Date(), // تحديث تاريخ آخر تعديل للرصيد الافتتاحي
         contactEmail,
         facebookUrl,
         instagramUrl,
@@ -32,6 +33,7 @@ export async function updateSettingsAction(formData: FormData) {
         currency,
         exchangeRate,
         openingBalance,
+        openingBalanceLastModified: new Date(), // تعيين تاريخ الإنشاء
         contactEmail,
         facebookUrl,
         instagramUrl,
