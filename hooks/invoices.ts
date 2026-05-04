@@ -155,7 +155,7 @@ export function useInvoices() {
   const [expenses, setExpenses] = useState<Invoice[]>([]);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [dateFilter, setDateFilter] = useState<InvoiceDateFilter>("this_month");
+  const [dateFilter, setDateFilter] = useState<InvoiceDateFilter>("today");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
 
