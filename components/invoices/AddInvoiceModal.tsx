@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Receipt, Trash2, Save } from "lucide-react";
+import { X, Receipt, Trash2, Save, FileText } from "lucide-react";
 
 export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products, type }: any) => {
     const {
@@ -18,15 +18,19 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-900 w-full max-w-6xl rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 dark:border-slate-800 my-8" dir="rtl">
                 <div className="flex justify-between items-center mb-8 border-b border-slate-100 dark:border-slate-800 pb-4">
                     <h2 className="text-2xl font-black flex items-center gap-3">
-                        <Receipt className={type === 'revenue' ? 'text-emerald-500' : 'text-red-500'} />
-                        إصدار فاتورة جديدة
+                        {type === 'other' ? (
+                            <FileText className="text-amber-500" />
+                        ) : (
+                            <Receipt className={type === 'revenue' ? 'text-emerald-500' : 'text-red-500'} />
+                        )}
+                        {type === 'revenue' ? 'إصدار فاتورة مقبوضات' : type === 'expenses' ? 'إصدار فاتورة مدفوعات' : 'إضافة بند أخرى'}
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-500 px-1">العميل / المورد</label>
+                        <label className="text-sm font-bold text-slate-500 px-1">{type === 'other' ? 'الطرف' : 'العميل / المورد'}</label>
                         <select value={client} onChange={(e) => setClient(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-none outline-none focus:ring-2 focus:ring-blue-500 font-bold">
                             <option value="">اختر من القائمة...</option>
                             {customers?.map((c: any) => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -44,66 +48,111 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
                 <div className="space-y-4">
                     {items.map((item: any, index: number) => (
                         <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 items-center">
-                            <div className="md:col-span-3 relative"> {/* تم إضافة relative هنا لضبط القائمة المنسدلة */}
-                                <label className="text-[10px] font-bold text-slate-400 mb-1">المنتج</label>
-                                <input
-                                    type="text"
-                                    value={searchQueries[index] || item.name || item.modelNumber}
-                                    placeholder="اكتب اسم المنتج..."
-                                    onFocus={() => setShowDropdown((prev: any) => ({ ...prev, [index]: true }))}
-                                    onChange={(e) => {
-                                        setSearchQueries((prev: any) => ({ ...prev, [index]: e.target.value }));
-                                        setShowDropdown((prev: any) => ({ ...prev, [index]: true }));
-                                    }}
-                                    className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl border-none outline-none font-bold text-sm shadow-sm"
-                                />
-                                <AnimatePresence>
-                                    {showDropdown[index] && (
-                                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute z-[210] w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
-                                            {products?.filter((p: any) =>
-                                                // البحث في الاسم
-                                                p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase()) ||
-                                                // البحث في رقم الموديل
-                                                (p.modelNumber && p.modelNumber.toLowerCase().includes((searchQueries[index] || "").toLowerCase()))
-                                            ).map((product: any) => (
-                                                <div
-                                                    key={product.id}
-                                                    onClick={() => updateItem(index, "productId", product.id.toString(), products)}
-                                                    className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0"
-                                                >
-                                                    <div className="flex justify-between items-center">
-                                                        <span>{product.name}</span>
-                                                        <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500">
-                                                            {product.modelNumber}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-blue-500 text-xs mt-1">ل.س {product.price}</div>
-                                                </div>
-                                            ))}
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                            <div className="md:col-span-1">
-                                <label className="text-[10px] font-bold text-slate-400 mb-1">الكمية</label>
-                                <input type="number" value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 0, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-center font-bold outline-none text-sm shadow-sm" />
-                            </div>
-                            <div className="md:col-span-1 text-center">
-                                <label className="text-[10px] font-bold text-slate-400 mb-1">السعر</label>
-                                <div className="p-3 text-sm font-bold">ل.س{item.price}</div>
-                            </div>
-                            <div className="md:col-span-1">
-                                <label className="text-[10px] font-bold text-red-400 mb-1">الخصم</label>
-                                <input type="number" value={item.discount} onChange={(e) => updateItem(index, "discount", e.target.value, products)} className="w-full bg-red-50 dark:bg-red-900/10 p-3 rounded-xl text-center font-bold text-red-600 outline-none text-sm border border-red-100 dark:border-red-900/20" />
-                            </div>
-                            <div className="md:col-span-4">
-                                <label className="text-[10px] font-bold text-slate-400 mb-1">ملاحظات المنتج</label>
-                                <input type="text" value={item.note} onChange={(e) => updateItem(index, "note", e.target.value, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl outline-none text-xs shadow-sm" placeholder="إضافة ملاحظة..." />
-                            </div>
-                            <div className="md:col-span-1 text-center font-black text-blue-600 italic">ل.س{item.total}</div>
-                            <div className="md:col-span-1 flex justify-center">
-                                <button onClick={() => setItems(items.filter((_: any, i: number) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
-                            </div>
+                            {type === 'other' ? (
+                                <>
+                                    <div className="md:col-span-7">
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">البيان</label>
+                                        <input
+                                            type="text"
+                                            value={item.name || item.note}
+                                            placeholder="اكتب بيان البند..."
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setItems((prev: any) => {
+                                                    const next = [...prev];
+                                                    next[index] = { ...next[index], name: value, note: value };
+                                                    return next;
+                                                });
+                                            }}
+                                            className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl border-none outline-none font-bold text-sm shadow-sm"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-3">
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">المبلغ</label>
+                                        <input
+                                            type="number"
+                                            value={item.price || ""}
+                                            placeholder="0"
+                                            onChange={(e) => {
+                                                const value = Number(e.target.value) || 0;
+                                                setItems((prev: any) => {
+                                                    const next = [...prev];
+                                                    next[index] = { ...next[index], price: value, total: value, quantity: 1, discount: 0 };
+                                                    return next;
+                                                });
+                                            }}
+                                            className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-center font-bold outline-none text-sm shadow-sm"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-1 text-center font-black text-amber-600 italic">ل.س{item.total}</div>
+                                    <div className="md:col-span-1 flex justify-center">
+                                        <button onClick={() => setItems(items.filter((_: any, i: number) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="md:col-span-3 relative"> {/* تم إضافة relative هنا لضبط القائمة المنسدلة */}
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">المنتج</label>
+                                        <input
+                                            type="text"
+                                            value={searchQueries[index] || item.name || item.modelNumber}
+                                            placeholder="اكتب اسم المنتج..."
+                                            onFocus={() => setShowDropdown((prev: any) => ({ ...prev, [index]: true }))}
+                                            onChange={(e) => {
+                                                setSearchQueries((prev: any) => ({ ...prev, [index]: e.target.value }));
+                                                setShowDropdown((prev: any) => ({ ...prev, [index]: true }));
+                                            }}
+                                            className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl border-none outline-none font-bold text-sm shadow-sm"
+                                        />
+                                        <AnimatePresence>
+                                            {showDropdown[index] && (
+                                                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute z-[210] w-full mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                                                    {products?.filter((p: any) =>
+                                                        // البحث في الاسم
+                                                        p.name.toLowerCase().includes((searchQueries[index] || "").toLowerCase()) ||
+                                                        // البحث في رقم الموديل
+                                                        (p.modelNumber && p.modelNumber.toLowerCase().includes((searchQueries[index] || "").toLowerCase()))
+                                                    ).map((product: any) => (
+                                                        <div
+                                                            key={product.id}
+                                                            onClick={() => updateItem(index, "productId", product.id.toString(), products)}
+                                                            className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer text-sm font-bold border-b border-slate-50 dark:border-slate-700 last:border-0"
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <span>{product.name}</span>
+                                                                <span className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-slate-500">
+                                                                    {product.modelNumber}
+                                                                </span>
+                                                            </div>
+                                                            <div className="text-blue-500 text-xs mt-1">ل.س {product.price}</div>
+                                                        </div>
+                                                    ))}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                    <div className="md:col-span-1">
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">الكمية</label>
+                                        <input type="number" value={item.quantity} onChange={(e) => updateItem(index, "quantity", parseInt(e.target.value) || 0, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl text-center font-bold outline-none text-sm shadow-sm" />
+                                    </div>
+                                    <div className="md:col-span-1 text-center">
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">السعر</label>
+                                        <div className="p-3 text-sm font-bold">ل.س{item.price}</div>
+                                    </div>
+                                    <div className="md:col-span-1">
+                                        <label className="text-[10px] font-bold text-red-400 mb-1">الخصم</label>
+                                        <input type="number" value={item.discount} onChange={(e) => updateItem(index, "discount", e.target.value, products)} className="w-full bg-red-50 dark:bg-red-900/10 p-3 rounded-xl text-center font-bold text-red-600 outline-none text-sm border border-red-100 dark:border-red-900/20" />
+                                    </div>
+                                    <div className="md:col-span-4">
+                                        <label className="text-[10px] font-bold text-slate-400 mb-1">ملاحظات المنتج</label>
+                                        <input type="text" value={item.note} onChange={(e) => updateItem(index, "note", e.target.value, products)} className="w-full bg-white dark:bg-slate-900 p-3 rounded-xl outline-none text-xs shadow-sm" placeholder="إضافة ملاحظة..." />
+                                    </div>
+                                    <div className="md:col-span-1 text-center font-black text-blue-600 italic">ل.س{item.total}</div>
+                                    <div className="md:col-span-1 flex justify-center">
+                                        <button onClick={() => setItems(items.filter((_: any, i: number) => i !== index))} className="text-red-400 hover:text-red-600"><Trash2 size={18} /></button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     ))}
                     <button onClick={addNewItem} className="w-full py-3 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-slate-400 font-bold text-xs hover:border-blue-500 hover:text-blue-500 transition-all">+ إضافة بند جديد</button>

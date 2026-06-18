@@ -45,7 +45,9 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                             : "فاتورة تبديل"
                                         : invoice.type === "REVENUE"
                                             ? "فاتورة مبيعات"
-                                            : "فاتورة مشتريات"}
+                                            : invoice.type === "EXPENSE"
+                                                ? "فاتورة مشتريات"
+                                                : "فاتورة أخرى"}
                                 </h1>
                                 <p className="text-slate-500 font-bold">رقم المرجع: <span className="font-mono text-slate-900">#{invoice.id.slice(-8)}</span></p>
                                 <p className="text-slate-500 font-bold">التاريخ: <span className="text-slate-900">{invoice.date}</span></p>
@@ -59,7 +61,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                         <div className="mb-12 bg-slate-50 p-8 rounded-[2.5rem] flex justify-between items-center">
                             <div>
                                 <h3 className="text-[10px] font-black text-blue-500 uppercase mb-2 tracking-widest">
-                                    {invoice.type === "REVENUE" ? "مشتري:" : "مورد:"}
+                                    {invoice.type === "REVENUE" ? "مشتري:" : invoice.type === "EXPENSE" ? "مورد:" : "الطرف:"}
                                 </h3>
                                 <p className="text-2xl font-black text-slate-800">{invoice.party}</p>
                             </div>
@@ -72,7 +74,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                         <table className="w-full mb-10 text-right">
                             <thead>
                                 <tr className="bg-slate-900 text-white">
-                                    <th className="px-6 py-4 rounded-r-2xl">المنتج (ID)</th>
+                                    <th className="px-6 py-4 rounded-r-2xl">{invoice.type === "OTHER" ? "البيان" : "المنتج (ID)"}</th>
                                     <th className="px-6 py-4 text-center">الكمية</th>
                                     <th className="px-6 py-4 text-center">سعر الوحدة</th>
                                     <th className="px-6 py-4 text-left rounded-l-2xl">الإجمالي</th>
@@ -84,7 +86,7 @@ export function ViewInvoiceModal({ isOpen, onClose, invoice, products }: any) {
                                         <tr key={idx} className="border-b border-slate-100">
                                             <td className="px-6 py-6 font-bold text-slate-700">
                                                 {/* هنا نستخدم الدالة لجلب الاسم بدلاً من الرقم */}
-                                                {getProductName(item.productId)}
+                                                {invoice.type === "OTHER" ? (item.note || "بند أخرى") : getProductName(item.productId)}
                                             </td>
                                             <td className="px-6 py-6 text-center font-bold">{item.quantity}</td>
                                             <td className="px-6 py-6 text-center text-slate-500">ل.س{item.unitPrice.toLocaleString()}</td>

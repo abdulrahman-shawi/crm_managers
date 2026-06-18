@@ -12,9 +12,11 @@ export default function InvoicesTable({invoices} : any) {
         setSelectedInvoice,
         revenues,
         expenses,
+        others,
         isLoading,
         totalRevenues,
         totalExpenses,
+        totalOthers,
         netBalance,
         getStatusStyle,
     } = invoices;
@@ -24,7 +26,7 @@ export default function InvoicesTable({invoices} : any) {
                     <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase border-b border-slate-100 dark:border-slate-800">
                         <tr>
                             <th className="px-8 py-5">الرقم المرجعي</th>
-                            <th className="px-8 py-5">{activeTab === "revenue" ? "العميل" : "المورد"}</th>
+                            <th className="px-8 py-5">{activeTab === "revenue" ? "العميل" : activeTab === "expenses" ? "المورد" : "الطرف"}</th>
                             <th className="px-8 py-5">البيان</th>
                             <th className="px-8 py-5">الحالة</th>
                             <th className="px-8 py-5">المبلغ الكلي</th>
@@ -37,14 +39,14 @@ export default function InvoicesTable({invoices} : any) {
                             <tr>
                                 <td colSpan={6} className="text-center py-10 text-slate-400">جاري تحميل البيانات...</td>
                             </tr>
-                        ) : (activeTab === "revenue" ? revenues : expenses).length === 0 ? (
+                        ) : (activeTab === "revenue" ? revenues : activeTab === "expenses" ? expenses : others).length === 0 ? (
                             /* حالة عدم وجود بيانات */
                             <tr>
                                 <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد فواتير لعرضها</td>
                             </tr>
                         ) : (
                             /* عرض البيانات */
-                            (activeTab === "revenue" ? revenues : expenses).map((item:any) => (
+                            (activeTab === "revenue" ? revenues : activeTab === "expenses" ? expenses : others).map((item:any) => (
                                 <tr key={item.id} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-8 py-5 font-mono text-sm font-bold text-blue-600">{item.id}</td>
                                     <td className="px-8 py-5 font-bold">{item.party}</td>
@@ -54,7 +56,7 @@ export default function InvoicesTable({invoices} : any) {
                                             {item.status}
                                         </span>
                                     </td>
-                                    <td className={`px-8 py-5 font-black font-sans ${activeTab === "revenue" ? "text-emerald-600" : "text-red-600"}`}>
+                                    <td className={`px-8 py-5 font-black font-sans ${activeTab === "revenue" ? "text-emerald-600" : activeTab === "expenses" ? "text-red-600" : "text-amber-600"}`}>
                                         ل.س{item.amount}
                                     </td>
                                     <td className="px-8 py-5 text-left">

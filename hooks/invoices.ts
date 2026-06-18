@@ -12,7 +12,7 @@ export interface Invoice {
   amount: number;
   date: string;
   status: "مدفوعة" | "معلقة";
-  type: "REVENUE" | "EXPENSE";
+  type: "REVENUE" | "EXPENSE" | "OTHER";
   sourceKind?: "INVOICE" | "RETURN_ENTRY";
   sourceLabel?: string;
   rawItems?: InvoiceItemRaw[];
@@ -135,7 +135,7 @@ export function useInvoices() {
   const { user } = useAuth();
 
   /* ===== UI State ===== */
-  const [activeTab, setActiveTab] = useState<"revenue" | "expenses">("revenue");
+  const [activeTab, setActiveTab] = useState<"revenue" | "expenses" | "other">("revenue");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -153,6 +153,7 @@ export function useInvoices() {
   /* ===== Data ===== */
   const [revenues, setRevenues] = useState<Invoice[]>([]);
   const [expenses, setExpenses] = useState<Invoice[]>([]);
+  const [others, setOthers] = useState<Invoice[]>([]);
   const [openingBalance, setOpeningBalance] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [dateFilter, setDateFilter] = useState<InvoiceDateFilter>("today");
@@ -188,7 +189,10 @@ export function useInvoices() {
           rawItems: inv.items,
           rawReturns: inv.returns || [],
           party: inv.customer?.name || "غير معروف",
-          category: inv.items?.[0]?.product?.name || (inv.items?.[0] ? `منتج: ${inv.items[0].productId}` : "عام"),
+          category:
+            inv.type === "OTHER"
+              ? inv.items?.[0]?.note || "بند أخرى"
+              : inv.items?.[0]?.product?.name || (inv.items?.[0] ? `منتج: ${inv.items[0].productId}` : "عام"),
           amount: Number(inv.totalAmount),
           date: new Date(inv.date).toLocaleDateString("ar-EG"),
           status: inv.status === "PENDING" ? "معلقة" : "مدفوعة",
@@ -236,6 +240,7 @@ export function useInvoices() {
 
       setRevenues(formatted.filter(i => i.type === "REVENUE"));
       setExpenses(formatted.filter(i => i.type === "EXPENSE"));
+      setOthers(formatted.filter(i => i.type === "OTHER"));
     } catch (e) {
       console.error(e);
     } finally {
@@ -270,7 +275,8 @@ export function useInvoices() {
 
   const totalRevenues = revenues.reduce((s, i) => s + i.amount, 0);
   const totalExpenses = expenses.reduce((s, i) => s + i.amount, 0);
-  const netBalance = openingBalance + totalRevenues - totalExpenses;
+  const totalOthers = others.reduce((s, i) => s + i.amount, 0);
+  const netBalance = openingBalance + totalRevenues - totalExpenses + totalOthers;
 
   const productProfitAnalysis = useMemo<ProductProfitRow[]>(() => {
     const rows = new Map<number, ProductProfitRow>();
@@ -343,16 +349,34 @@ export function useInvoices() {
   };
 
   const handleSubmit = async () => {
-    if (!client || !items.length) return alert("البيانات ناقصة");
+    if (!client) return alert("البيانات ناقصة");
+    if (activeTab !== "other" && !items.length) return alert("البيانات ناقصة");
+
+    if (activeTab === "other") {
+      const invalidItems = items.some(
+        (item) => !(item.name || item.note) || Number(item.total || item.price || 0) <= 0
+      );
+      if (invalidItems) return alert("يرجى إدخال البيان والمبلغ لكل بند");
+    }
 
     setIsSubmitting(true);
+
+    const invoiceItems = activeTab === "other"
+      ? items.map((item) => ({
+          ...item,
+          productId: item.productId || "",
+          price: item.price || item.total || 0,
+          quantity: item.quantity || 1,
+          note: item.name || item.note || "بند أخرى",
+        }))
+      : items;
 
     const invoiceData = {
       type: activeTab,
       clientName: client,
       status,
       userId: user?.id,
-      items,
+      items: invoiceItems,
       subTotal,
       overallDiscount,
       grandTotal,
@@ -403,6 +427,7 @@ export function useInvoices() {
     selectedInvoice,
     revenues,
     expenses,
+    others,
     isLoading,
     client,
     items,
@@ -413,6 +438,7 @@ export function useInvoices() {
     openingBalance,
     totalRevenues,
     totalExpenses,
+    totalOthers,
     netBalance,
     productProfitAnalysis,
     monthlySalesTotal,

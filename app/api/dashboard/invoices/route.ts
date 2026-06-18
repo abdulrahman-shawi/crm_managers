@@ -125,7 +125,10 @@ export async function POST(request: Request) {
         const { type, clientName, status, items, grandTotal , uderId } = body;
 
         // 1. تحويل القيم للـ Enums
-        const formattedType = type === "revenue" ? "REVENUE" : "EXPENSE";
+        const formattedType =
+            type === "revenue" ? "REVENUE" :
+            type === "expense" ? "EXPENSE" :
+            "OTHER";
         const formattedStatus = status === "مدفوعة" ? "PAID" : "PENDING";
 
         // 2. البحث عن العميل
@@ -146,43 +149,47 @@ export async function POST(request: Request) {
                     customerId: customer ? customer.id : null,
                     items: {
                         create: items.map((item: any) => ({
-                            productId: parseInt(item.productId),
-                            quantity: parseInt(item.quantity),
-                            unitPrice: parseFloat(item.price),
+                            productId: item.productId ? parseInt(item.productId) : null,
+                            quantity: parseInt(item.quantity) || 1,
+                            unitPrice: parseFloat(item.price || item.unitPrice || 0),
                             discount: parseFloat(item.discount || 0),
-                            note: item.note || "",
-                            subTotal: parseFloat(item.total)
+                            note: item.note || item.name || "",
+                            subTotal: parseFloat(item.total || 0)
                         }))
                     }
                 },
                 include: { items: true }
             });
 
-            // ب. تحديث المخزون لكل منتج
-            for (const item of items) {
-                const productId = parseInt(item.productId);
-                const quantity = parseInt(item.quantity);
+            // ب. تحديث المخزون لكل منتج (يتجاوز عند OTHER)
+            if (formattedType !== "OTHER") {
+                for (const item of items) {
+                    const productId = item.productId ? parseInt(item.productId) : null;
+                    if (!productId) continue;
 
-                // جلب بيانات المنتج للتأكد من المخزون الحالي (فقط في حالة البيع REVENUE)
-                if (formattedType === "REVENUE") {
-                    const product = await tx.product.findUnique({
-                        where: { id: productId }
-                    });
+                    const quantity = parseInt(item.quantity);
 
-                    if (!product || product.stock < quantity) {
-                        throw new Error(`المخزون غير كافٍ للمنتج: ${product?.name || productId}`);
-                    }
-                }
+                    // جلب بيانات المنتج للتأكد من المخزون الحالي (فقط في حالة البيع REVENUE)
+                    if (formattedType === "REVENUE") {
+                        const product = await tx.product.findUnique({
+                            where: { id: productId }
+                        });
 
-                // ج. تنفيذ التحديث (زيادة أو نقصان)
-                await tx.product.update({
-                    where: { id: productId },
-                    data: {
-                        stock: {
-                            [formattedType === "REVENUE" ? "decrement" : "increment"]: quantity
+                        if (!product || product.stock < quantity) {
+                            throw new Error(`المخزون غير كافٍ للمنتج: ${product?.name || productId}`);
                         }
                     }
-                });
+
+                    // ج. تنفيذ التحديث (زيادة أو نقصان)
+                    await tx.product.update({
+                        where: { id: productId },
+                        data: {
+                            stock: {
+                                [formattedType === "REVENUE" ? "decrement" : "increment"]: quantity
+                            }
+                        }
+                    });
+                }
             }
 
             return newInvoice;

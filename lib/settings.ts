@@ -38,20 +38,23 @@ export async function getGeneralSettings() {
           },
         });
 
-        // حساب الإيرادات والمصروفات للشهر السابق
+        // حساب الإيرادات والمصروفات والأخرى للشهر السابق
         let totalRevenues = 0;
         let totalExpenses = 0;
+        let totalOthers = 0;
 
         invoices.forEach((invoice) => {
           if (invoice.type === 'REVENUE') {
             totalRevenues += Number(invoice.totalAmount);
           } else if (invoice.type === 'EXPENSE') {
             totalExpenses += Number(invoice.totalAmount);
+          } else if (invoice.type === 'OTHER') {
+            totalOthers += Number(invoice.totalAmount);
           }
         });
 
         // حساب الرصيد النهائي للشهر السابق
-        const previousMonthNetBalance = Number(settings.openingBalance) + totalRevenues - totalExpenses;
+        const previousMonthNetBalance = Number(settings.openingBalance) + totalRevenues - totalExpenses + totalOthers;
 
         // تحديث الرصيد الافتتاحي للشهر الحالي
         await prisma.generalSettings.update({

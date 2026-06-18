@@ -1,6 +1,6 @@
 "use client";
 import {
-    ArrowDownCircle, ArrowUpCircle, Plus
+    ArrowDownCircle, ArrowUpCircle, Plus, CircleDollarSign
 } from "lucide-react";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
@@ -28,6 +28,7 @@ export default function InvoicesDashboard() {
         openingBalance,
         totalRevenues,
         totalExpenses,
+        totalOthers,
         netBalance,
         productProfitAnalysis,
         monthlySalesTotal,
@@ -50,6 +51,7 @@ export default function InvoicesDashboard() {
                 netBalance={netBalance}
                 totalRevenues={totalRevenues}
                 totalExpenses={totalExpenses}
+                totalOthers={totalOthers}
                 monthlyNetProfit={monthlyNetProfit}
             />
             {/* شريط التحكم */}
@@ -60,6 +62,9 @@ export default function InvoicesDashboard() {
                     </button>
                     <button onClick={() => setActiveTab("expenses")} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === "expenses" ? "bg-white dark:bg-slate-700 shadow-sm text-red-600" : "text-slate-500"}`}>
                         <ArrowUpCircle size={18} /> مدفوعات
+                    </button>
+                    <button onClick={() => setActiveTab("other")} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === "other" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600" : "text-slate-500"}`}>
+                        <CircleDollarSign size={18} /> أخرى
                     </button>
                 </div>
                 <div className="flex flex-col md:flex-row w-full md:w-auto gap-3">
@@ -92,8 +97,8 @@ export default function InvoicesDashboard() {
                         </>
                     )}
 
-                    <button onClick={() => setIsModalOpen(true)} className={`w-full md:w-auto px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-white shadow-lg transition-transform active:scale-95 ${activeTab === "revenue" ? "bg-emerald-600 shadow-emerald-500/20" : "bg-red-600 shadow-red-500/20"}`}>
-                        <Plus size={20} /> إضافة {activeTab === "revenue" ? "مقبوضات" : "مدفوعات"}
+                    <button onClick={() => setIsModalOpen(true)} className={`w-full md:w-auto px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 text-white shadow-lg transition-transform active:scale-95 ${activeTab === "revenue" ? "bg-emerald-600 shadow-emerald-500/20" : activeTab === "expenses" ? "bg-red-600 shadow-red-500/20" : "bg-amber-600 shadow-amber-500/20"}`}>
+                        <Plus size={20} /> إضافة {activeTab === "revenue" ? "مقبوضات" : activeTab === "expenses" ? "مدفوعات" : "أخرى"}
                     </button>
                 </div>
             </div>
