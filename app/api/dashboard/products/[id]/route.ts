@@ -94,14 +94,33 @@ export async function GET(request: NextRequest, { params }: Props) {
 }
 
 export async function DELETE(request: NextRequest, { params }: Props) {
-   try {
-      const id = params.id;
-      await prisma.product.delete({
-         where: { id: Number(id) }
-      });
-      // الخيار الأفضل: نجاح مع إرسال تأكيد JSON
-      return NextResponse.json({ success: true }, { status: 200 });
-   } catch (error: any) {
-      return NextResponse.json({ success: false }, { status: 500 });
-   }
+  try {
+    const id = Number(params.id);
+    if (Number.isNaN(id)) {
+      return NextResponse.json({ success: false, message: "معرف المنتج غير صحيح" }, { status: 400 });
+    }
+
+    await prisma.$transaction([
+      prisma.invoiceItem.updateMany({
+        where: { productId: id },
+        data: { productId: null },
+      }),
+      prisma.return.deleteMany({
+        where: {
+          OR: [
+            { returnedProductId: id },
+            { exchangedProductId: id },
+          ],
+        },
+      }),
+      prisma.product.delete({
+        where: { id },
+      }),
+    ]);
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error: any) {
+    console.error("Delete Product Error:", error);
+    return NextResponse.json({ success: false, message: error?.message || "فشل حذف المنتج" }, { status: 500 });
+  }
 }
