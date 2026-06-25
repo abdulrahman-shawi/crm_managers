@@ -46,7 +46,7 @@ export function useProductForm(onSuccess: () => void) {
     const itemsPerPage = 10;
         const filteredProducts = useMemo(() => {
         const normalizedRole = user?.role?.toUpperCase();
-        const isPrivilegedUser = normalizedRole === "ADMIN" || normalizedRole === "MANAGER";
+        const isPrivilegedUser = normalizedRole === "ADMIN" || normalizedRole === "USER";
         const currentUserId = Number(user?.id);
         const hasUser = Number.isFinite(currentUserId) && currentUserId > 0;
 
