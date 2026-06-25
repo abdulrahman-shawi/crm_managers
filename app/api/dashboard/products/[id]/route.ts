@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { applyComputedProductPrices, normalizeExchangeRate } from "@/lib/pricing";
+import { getCurrentUser } from "@/lib/current-user";
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile } from "fs/promises";
 import path from "path";
@@ -10,6 +11,14 @@ interface Props {
 
 export async function PUT(request: NextRequest, { params }: Props) {
   try {
+    const currentUser = await getCurrentUser();
+    if (currentUser?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "غير مصرح. التعديل متاح فقط للمشرف ADMIN" },
+        { status: 403 }
+      );
+    }
+
     const id = params.id;
     const formData = await request.formData(); // الحل هنا: استلام formData وليس json
 
@@ -95,6 +104,14 @@ export async function GET(request: NextRequest, { params }: Props) {
 
 export async function DELETE(request: NextRequest, { params }: Props) {
   try {
+    const currentUser = await getCurrentUser();
+    if (currentUser?.role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, message: "غير مصرح. الحذف متاح فقط للمشرف ADMIN" },
+        { status: 403 }
+      );
+    }
+
     const id = Number(params.id);
     if (Number.isNaN(id)) {
       return NextResponse.json({ success: false, message: "معرف المنتج غير صحيح" }, { status: 400 });

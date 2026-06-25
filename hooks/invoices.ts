@@ -133,6 +133,7 @@ const getDateRangeByFilter = (
 /* ========= Hook ========= */
 export function useInvoices() {
   const { user } = useAuth();
+  const canViewProfit = user?.role?.toUpperCase() === "ADMIN";
 
   /* ===== UI State ===== */
   const [activeTab, setActiveTab] = useState<"revenue" | "expenses" | "other">("revenue");
@@ -279,6 +280,10 @@ export function useInvoices() {
   const netBalance = openingBalance + totalRevenues - totalExpenses + totalOthers;
 
   const productProfitAnalysis = useMemo<ProductProfitRow[]>(() => {
+    if (!canViewProfit) {
+      return [];
+    }
+
     const rows = new Map<number, ProductProfitRow>();
 
     revenues.forEach((invoice) => {
@@ -310,7 +315,7 @@ export function useInvoices() {
     });
 
     return Array.from(rows.values()).sort((a, b) => b.netProfit - a.netProfit);
-  }, [revenues]);
+  }, [canViewProfit, revenues]);
 
   const monthlySalesTotal = productProfitAnalysis.reduce((sum, row) => sum + row.salesTotal, 0);
   const monthlyWholesaleTotal = productProfitAnalysis.reduce((sum, row) => sum + row.wholesaleTotal, 0);
@@ -440,6 +445,7 @@ export function useInvoices() {
     totalExpenses,
     totalOthers,
     netBalance,
+    canViewProfit,
     productProfitAnalysis,
     monthlySalesTotal,
     monthlyWholesaleTotal,

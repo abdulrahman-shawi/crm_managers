@@ -28,6 +28,8 @@ type ProductEntryCurrency = "SAR" | "USD";
 
 export function useProductForm(onSuccess: () => void) {
     const { user } = useAuth();
+    const normalizedRole = user?.role?.toUpperCase();
+    const canManageProducts = normalizedRole === "ADMIN";
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
     const [products, setProducts] = useState<Product[]>([]);
@@ -45,7 +47,6 @@ export function useProductForm(onSuccess: () => void) {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
         const filteredProducts = useMemo(() => {
-        const normalizedRole = user?.role?.toUpperCase();
         const isPrivilegedUser = normalizedRole === "ADMIN" || normalizedRole === "USER";
         const currentUserId = Number(user?.id);
         const hasUser = Number.isFinite(currentUserId) && currentUserId > 0;
@@ -62,7 +63,7 @@ export function useProductForm(onSuccess: () => void) {
             p.name.toLowerCase().includes(lowerTerm) || 
             (p.modelNumber && p.modelNumber.toLowerCase().includes(lowerTerm))
         );
-    }, [products, searchTerm, user?.id]);
+    }, [normalizedRole, products, searchTerm, user?.id]);
 
   // --- حسابات الترقيم ---
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -165,6 +166,11 @@ export function useProductForm(onSuccess: () => void) {
     };
 
     const clickEdit = (product: Product) => {
+        if (!canManageProducts) {
+            alert("التعديل متاح فقط للمشرف ADMIN");
+            return;
+        }
+
         setIsEditing(true);
         setCurrentProductId(product.id);
         setFormData({
@@ -244,6 +250,11 @@ export function useProductForm(onSuccess: () => void) {
     };
 
     const handleDeleteProduct = async (id: number) => {
+        if (!canManageProducts) {
+            alert("الحذف متاح فقط للمشرف ADMIN");
+            return;
+        }
+
         if (!confirm("هل أنت متأكد من حذف هذا المنتج نهائياً؟")) return;
         try {
             const res = await axios.delete(`/api/dashboard/products/${id}`);
@@ -290,6 +301,7 @@ export function useProductForm(onSuccess: () => void) {
         currentItems,
         totalPages,
         filteredProducts,
+        canManageProducts,
         indexOfFirstItem,
         indexOfLastItem,
         handleViewProduct

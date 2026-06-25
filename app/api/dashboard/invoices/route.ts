@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/current-user";
 import {
     applyComputedProductPrices,
     getComputedInvoiceItemTotals,
@@ -8,6 +9,8 @@ import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
     try {
+        const currentUser = await getCurrentUser();
+        const canViewProfit = currentUser?.role === "ADMIN";
         const { searchParams } = new URL(request.url);
         const fromParam = searchParams.get("from");
         const toParam = searchParams.get("to");
@@ -45,10 +48,10 @@ export async function GET(request: Request) {
                                 id: true,
                                 name: true,
                                 modelNumber: true,
-                                priceLow: true,
+                                priceLow: canViewProfit,
                                 price: true,
                                 sourcePrice: true,
-                                sourcePriceLow: true,
+                                sourcePriceLow: canViewProfit,
                                 pricingCurrency: true,
                             },
                         },

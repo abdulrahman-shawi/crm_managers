@@ -19,6 +19,7 @@ const ProductTable: React.FunctionComponent<IProductTableProps> = (props) => {
         setCurrentPage,
         currentItems,
         totalPages,
+          canManageProducts,
         filteredProducts,
         indexOfFirstItem,
         indexOfLastItem,
@@ -82,11 +83,15 @@ const ProductTable: React.FunctionComponent<IProductTableProps> = (props) => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-left">
-                        <UltraDropdown
-                          onDelete={() => handleDeleteProduct(product.id)}
-                          onEdit={() => clickEdit(product)}
-                          onView={() => handleViewProduct(product)}
-                        />
+                        {canManageProducts ? (
+                          <UltraDropdown
+                            onDelete={() => handleDeleteProduct(product.id)}
+                            onEdit={() => clickEdit(product)}
+                            onView={() => handleViewProduct(product)}
+                          />
+                        ) : (
+                          <span className="text-xs font-bold text-slate-400">ADMIN فقط</span>
+                        )}
                       </td>
                     </motion.tr>
                   ))

@@ -3,7 +3,7 @@ import * as React from 'react';
 
 
 
-const AnalycisInvoices = ({ openingBalance, netBalance, totalRevenues, totalExpenses, totalOthers, monthlyNetProfit }: any) => {
+const AnalycisInvoices = ({ openingBalance, netBalance, totalRevenues, totalExpenses, totalOthers, monthlyNetProfit, canViewProfit }: any) => {
   return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* رصيد الحساب الحالي */}
@@ -65,17 +65,19 @@ const AnalycisInvoices = ({ openingBalance, netBalance, totalRevenues, totalExpe
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
-                    <div>
-                        <p className="text-slate-500 text-sm font-medium">صافي ربح المبيعات (حسب الفلتر)</p>
-                        <h3 className={`text-2xl font-black font-sans ${monthlyNetProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
-                            ل.س{monthlyNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </h3>
+                {canViewProfit && (
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-sm">
+                        <div>
+                            <p className="text-slate-500 text-sm font-medium">صافي ربح المبيعات (حسب الفلتر)</p>
+                            <h3 className={`text-2xl font-black font-sans ${monthlyNetProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                ل.س{monthlyNetProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </h3>
+                        </div>
+                        <div className={`p-4 rounded-2xl ${monthlyNetProfit >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-red-50 dark:bg-red-900/20 text-red-600"}`}>
+                            <ArrowDownLeft size={30} />
+                        </div>
                     </div>
-                    <div className={`p-4 rounded-2xl ${monthlyNetProfit >= 0 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-red-50 dark:bg-red-900/20 text-red-600"}`}>
-                        <ArrowDownLeft size={30} />
-                    </div>
-                </div>
+                )}
             </div>
   );
 };
