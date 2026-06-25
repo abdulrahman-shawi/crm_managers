@@ -45,12 +45,14 @@ export function useProductForm(onSuccess: () => void) {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
         const filteredProducts = useMemo(() => {
-        const hasUser = Boolean(user?.id);
+        const normalizedRole = user?.role?.toUpperCase();
+        const isPrivilegedUser = normalizedRole === "ADMIN" || normalizedRole === "MANAGER";
+        const currentUserId = Number(user?.id);
+        const hasUser = Number.isFinite(currentUserId) && currentUserId > 0;
 
-        // 1. التصفية حسب المستخدم فقط إذا كان المستخدم متوفراً
-        const baseProducts = hasUser
-            ? products.filter((p) => Number(p.userId) === Number(user?.id))
-            : products;
+        const baseProducts = !hasUser || isPrivilegedUser
+            ? products
+            : products.filter((p) => p.userId == null || Number(p.userId) === currentUserId);
 
         // 2. التصفية حسب الاسم أو رقم الموديل
         if (!searchTerm.trim()) return baseProducts;
