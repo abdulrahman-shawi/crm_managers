@@ -21,19 +21,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const isCollapsed = typeof window !== "undefined" && window.innerWidth < 768
-    ? !isMobileSidebarOpen
-    : isDesktopCollapsed;
-
-  const setSidebarState = (next: boolean) => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setIsMobileSidebarOpen(!next);
-      return;
-    }
-
-    setIsDesktopCollapsed(next);
-  };
-
   return (
     <ThemeProvider
           attribute="class"
@@ -54,7 +41,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
       )}
 
-      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setSidebarState} />
+      <Sidebar
+        isDesktopCollapsed={isDesktopCollapsed}
+        isMobileOpen={isMobileSidebarOpen}
+        onDesktopToggle={() => setIsDesktopCollapsed((prev) => !prev)}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
+      />
 
       <div className="flex-1 flex flex-col min-w-0">
         <Navbar onMenuClick={() => {

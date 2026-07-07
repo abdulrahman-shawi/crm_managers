@@ -16,11 +16,16 @@ type MenuItem = {
   href: string;
 };
 
-export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setIsCollapsed: (val: boolean) => void }) => {
+type SidebarProps = {
+  isDesktopCollapsed: boolean;
+  isMobileOpen: boolean;
+  onDesktopToggle: () => void;
+  onMobileClose: () => void;
+};
+
+export const Sidebar = ({ isDesktopCollapsed, isMobileOpen, onDesktopToggle, onMobileClose }: SidebarProps) => {
   const pathname = usePathname();
   const { user } = useAuth();
-  const isDesktopCollapsed = isCollapsed;
-  const isMobileOpen = !isCollapsed;
   // تنظيم الروابط في مجموعات لسهولة القراءة
   const menuGroups = [
     {
@@ -68,7 +73,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         
         {/* زر التحكم في العرض (للكمبيوتر فقط) */}
         <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={onDesktopToggle}
           className={`hidden md:flex absolute ${isDesktopCollapsed ? "md:-left-4" : "-left-4"} top-10 h-7 w-7 items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform z-[80]`}
         >
           {isDesktopCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -102,7 +107,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => window.innerWidth < 768 && setIsCollapsed(true)}
+                      onClick={() => window.innerWidth < 768 && onMobileClose()}
                       className={`
                         relative flex items-center gap-4 h-12 px-4 rounded-xl transition-all duration-300 group
                         ${isActive 
