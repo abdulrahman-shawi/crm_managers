@@ -19,6 +19,8 @@ type MenuItem = {
 export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean; setIsCollapsed: (val: boolean) => void }) => {
   const pathname = usePathname();
   const { user } = useAuth();
+  const isDesktopCollapsed = isCollapsed;
+  const isMobileOpen = !isCollapsed;
   // تنظيم الروابط في مجموعات لسهولة القراءة
   const menuGroups = [
     {
@@ -59,17 +61,17 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         fixed md:sticky top-0 right-0 h-screen z-[70] transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]
         bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800
         flex flex-col shadow-2xl md:shadow-none
-        ${isCollapsed 
-          ? "w-[280px] translate-x-full md:translate-x-0 md:w-[88px]" 
-          : "w-[280px] translate-x-0"}
+        w-[280px]
+        ${isMobileOpen ? "translate-x-0" : "translate-x-full"}
+        md:translate-x-0 ${isDesktopCollapsed ? "md:w-[88px]" : "md:w-[280px]"}
       `}>
         
         {/* زر التحكم في العرض (للكمبيوتر فقط) */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`absolute ${isCollapsed? "left-[11px] md:-left-4" : "-left-4"} top-10 flex h-7 w-7 items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform z-[80]`}
+          className={`hidden md:flex absolute ${isDesktopCollapsed ? "md:-left-4" : "-left-4"} top-10 h-7 w-7 items-center justify-center bg-blue-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform z-[80]`}
         >
-          {isCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          {isDesktopCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
 
         {/* الشعار - Logo Section */}
@@ -78,7 +80,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
             <div className="h-11 w-11 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/30 shrink-0">
               <img src="/icons.jpg" alt="Logo" className="w-7 h-7 object-contain brightness-0 invert" />
             </div>
-            <div className={`transition-all duration-300 ${isCollapsed ? "md:opacity-0 md:translate-x-4" : "opacity-100"}`}>
+            <div className={`transition-all duration-300 ${isDesktopCollapsed ? "md:opacity-0 md:translate-x-4" : "opacity-100"}`}>
               <h1 className="font-black text-lg tracking-tight text-slate-800 dark:text-white">نظامي الذكي</h1>
               <p className="text-[10px] text-blue-500 font-bold uppercase">إدارة متكاملة</p>
             </div>
@@ -89,7 +91,7 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 space-y-8 custom-scrollbar">
           {menuGroups.map((group, idx) => (
             <div key={idx} className="space-y-2">
-              <p className={`px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[2px] transition-opacity duration-300 ${isCollapsed ? "md:opacity-0" : "opacity-100"}`}>
+              <p className={`px-4 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[2px] transition-opacity duration-300 ${isDesktopCollapsed ? "md:opacity-0" : "opacity-100"}`}>
                 {group.group}
               </p>
               
@@ -110,12 +112,12 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
                     >
                       <item.icon size={22} className={`shrink-0 ${isActive ? "animate-pulse" : "group-hover:scale-110 transition-transform"}`} />
                       
-                      <span className={`font-bold text-sm whitespace-nowrap transition-all duration-300 ${isCollapsed ? "md:opacity-0 md:translate-x-10" : "opacity-100"}`}>
+                                            <span className={`font-bold text-sm whitespace-nowrap transition-all duration-300 ${isDesktopCollapsed ? "md:opacity-0 md:translate-x-10" : "opacity-100"}`}>
                         {item.label}
                       </span>
 
                       {/* Tooltip في حالة التصغير (Desktop) */}
-                      {isCollapsed && (
+                                            {isDesktopCollapsed && (
                         <div className="hidden md:block absolute right-full mr-6 px-3 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-4 transition-all pointer-events-none shadow-2xl">
                           {item.label}
                         </div>
@@ -130,20 +132,20 @@ export const Sidebar = ({ isCollapsed, setIsCollapsed }: { isCollapsed: boolean;
 
         {/* الجزء السفلي - Footer Section */}
         <div className="p-4 mt-auto">
-          <div className={`p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800 transition-all ${isCollapsed ? "md:p-2" : "p-3"}`}>
+          <div className={`p-3 rounded-2xl bg-slate-100 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800 transition-all ${isDesktopCollapsed ? "md:p-2" : "p-3"}`}>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 border-2 border-white dark:border-slate-800 shadow-sm">
                  <span className="font-bold text-blue-600 text-sm">A</span>
               </div>
-              <div className={`transition-all duration-300 ${isCollapsed ? "md:hidden" : "block"}`}>
+              <div className={`transition-all duration-300 ${isDesktopCollapsed ? "md:hidden" : "block"}`}>
                 <p className="text-xs font-black text-slate-800 dark:text-white truncate">عبدالرحمن الشاوي</p>
                 <p className="text-[10px] text-slate-500 font-medium truncate">{user?.email}</p>
               </div>
             </div>
             
-            <button className={`mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors ${isCollapsed ? "md:h-10 md:w-10 md:mx-auto md:p-0" : "px-3"}`}>
+            <button className={`mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors ${isDesktopCollapsed ? "md:h-10 md:w-10 md:mx-auto md:p-0" : "px-3"}`}>
               <LogOut size={18} />
-              {!isCollapsed && <span className="font-bold text-xs text-left w-full">خروج</span>}
+              {!isDesktopCollapsed && <span className="font-bold text-xs text-left w-full">خروج</span>}
             </button>
           </div>
         </div>
