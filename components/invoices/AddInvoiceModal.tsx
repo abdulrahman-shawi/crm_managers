@@ -14,10 +14,10 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-900 w-full max-w-6xl rounded-[2.5rem] shadow-2xl p-8 border border-slate-200 dark:border-slate-800 my-8" dir="rtl">
-                <div className="flex justify-between items-center mb-8 border-b border-slate-100 dark:border-slate-800 pb-4">
-                    <h2 className="text-2xl font-black flex items-center gap-3">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-slate-900 w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl p-4 sm:p-8 border border-slate-200 dark:border-slate-800 my-4 sm:my-8" dir="rtl">
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <h2 className="text-xl sm:text-2xl font-black flex items-center gap-3">
                         {type === 'other' ? (
                             <FileText className="text-amber-500" />
                         ) : (
@@ -25,7 +25,7 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
                         )}
                         {type === 'revenue' ? 'إصدار فاتورة مقبوضات' : type === 'expenses' ? 'إصدار فاتورة مدفوعات' : 'إضافة بند أخرى'}
                     </h2>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X /></button>
+                    <button onClick={onClose} className="self-end p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X /></button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -159,25 +159,25 @@ export const AddInvoiceModal = ({ isOpen, onClose, manager, customers, products,
                 </div>
 
                 {/* قسم الإجمالي والخصم الكلي */}
-                <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex gap-6 items-center">
+                <div className="mt-10 pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col md:flex-row justify-between items-stretch md:items-center gap-6">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 sm:items-center">
                         <div className="space-y-1">
                             <label className="text-[10px] font-bold text-red-500 uppercase px-1">خصم إضافي (كلي)</label>
                             <div className="relative">
-                                <input type="number" value={overallDiscount} onChange={(e) => setOverallDiscount(Number(e.target.value))} className="w-32 bg-red-50 dark:bg-red-900/10 p-3 rounded-2xl border border-red-100 dark:border-red-900/20 outline-none font-bold text-red-600 text-center" placeholder="0" />
+                                <input type="number" value={overallDiscount} onChange={(e) => setOverallDiscount(Number(e.target.value))} className="w-full sm:w-32 bg-red-50 dark:bg-red-900/10 p-3 rounded-2xl border border-red-100 dark:border-red-900/20 outline-none font-bold text-red-600 text-center" placeholder="0" />
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-400">ل.س</span>
                             </div>
                         </div>
-                        <div className="bg-blue-50 dark:bg-blue-900/20 px-8 py-4 rounded-3xl">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 px-6 sm:px-8 py-4 rounded-3xl">
                             <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">الإجمالي النهائي</p>
                             <h3 className="text-3xl font-black font-sans text-blue-600 italic">ل.س{grandTotal.toLocaleString()}</h3>
                         </div>
                     </div>
-                    <div className="flex gap-4">
+                    <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
                         <button
                             onClick={handleSubmit}
                             disabled={isSubmitting}
-                            className={`px-12 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all flex items-center gap-2 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`px-8 sm:px-12 py-4 bg-blue-600 text-white rounded-2xl font-black shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             {isSubmitting ? (
                                 <span className="flex items-center gap-2">جاري الحفظ...</span>
