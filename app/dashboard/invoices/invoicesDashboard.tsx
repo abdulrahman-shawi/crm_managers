@@ -44,7 +44,7 @@ export default function InvoicesDashboard() {
     } = invoices;
 
     return (
-        <div className="space-y-8 p-4 md:p-8" dir="rtl">
+        <div className="space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 overflow-x-hidden" dir="rtl">
             {/* بطاقات الملخص */}
             {/* بطاقات الملخص الديناميكية */}
             <AnalycisInvoices
@@ -57,15 +57,15 @@ export default function InvoicesDashboard() {
                 canViewProfit={canViewProfit}
             />
             {/* شريط التحكم */}
-            <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-white dark:bg-slate-900/50 backdrop-blur-md p-4 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-full md:w-auto">
-                    <button onClick={() => setActiveTab("revenue")} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === "revenue" ? "bg-white dark:bg-slate-700 shadow-sm text-blue-600" : "text-slate-500"}`}>
+            <div className="flex flex-col md:flex-row gap-4 md:gap-6 items-stretch md:items-center justify-between bg-white dark:bg-slate-900/50 backdrop-blur-md p-3 sm:p-4 rounded-[2rem] sm:rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div className="grid grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-full md:w-auto">
+                    <button onClick={() => setActiveTab("revenue")} className={`min-w-0 flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 rounded-xl font-bold text-sm sm:text-base transition-all ${activeTab === "revenue" ? "bg-white dark:bg-slate-700 shadow-sm text-blue-600" : "text-slate-500"}`}>
                         <ArrowDownCircle size={18} /> مقبوضات
                     </button>
-                    <button onClick={() => setActiveTab("expenses")} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === "expenses" ? "bg-white dark:bg-slate-700 shadow-sm text-red-600" : "text-slate-500"}`}>
+                    <button onClick={() => setActiveTab("expenses")} className={`min-w-0 flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 rounded-xl font-bold text-sm sm:text-base transition-all ${activeTab === "expenses" ? "bg-white dark:bg-slate-700 shadow-sm text-red-600" : "text-slate-500"}`}>
                         <ArrowUpCircle size={18} /> مدفوعات
                     </button>
-                    <button onClick={() => setActiveTab("other")} className={`flex-1 md:flex-none flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold transition-all ${activeTab === "other" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600" : "text-slate-500"}`}>
+                    <button onClick={() => setActiveTab("other")} className={`min-w-0 flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 rounded-xl font-bold text-sm sm:text-base transition-all ${activeTab === "other" ? "bg-white dark:bg-slate-700 shadow-sm text-amber-600" : "text-slate-500"}`}>
                         <CircleDollarSign size={18} /> أخرى
                     </button>
                 </div>
@@ -109,9 +109,9 @@ export default function InvoicesDashboard() {
             <InvoicesTable invoices={invoices} />
 
             {canViewProfit && (
-                <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800">
-                        <h3 className="text-xl font-black text-slate-800 dark:text-slate-100">تحليل ربح المبيعات لكل منتج</h3>
+                <div className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+                    <div className="px-4 sm:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800">
+                        <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100">تحليل ربح المبيعات لكل منتج</h3>
                         <p className="text-slate-500 text-sm mt-1">يتم احتساب صافي الربح = سعر البيع - سعر الجملة حسب البنود المباعة ضمن الفلتر الحالي.</p>
                         <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
                             <span className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700">إجمالي البيع: ل.س{monthlySalesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -122,8 +122,8 @@ export default function InvoicesDashboard() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-right">
+                    <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-right min-w-[760px]">
                             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 text-xs font-bold uppercase border-b border-slate-100 dark:border-slate-800">
                                 <tr>
                                     <th className="px-8 py-4">المنتج</th>
@@ -155,6 +155,45 @@ export default function InvoicesDashboard() {
                                 )}
                             </tbody>
                         </table>
+                    </div>
+
+                    <div className="md:hidden p-3 space-y-3">
+                        {productProfitAnalysis.length === 0 ? (
+                            <div className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-4 py-8 text-center text-slate-400">لا توجد مبيعات ضمن الفلتر الحالي</div>
+                        ) : (
+                            productProfitAnalysis.map((row) => (
+                                <div key={row.productId} className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 p-4 space-y-3">
+                                    <div>
+                                        <p className="text-[11px] font-black text-slate-400 mb-1">المنتج</p>
+                                        <p className="font-bold text-slate-800 dark:text-slate-100 break-words">{row.productName}</p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 px-4 py-3">
+                                            <p className="text-[11px] font-black text-slate-400 mb-1">الموديل</p>
+                                            <p className="font-mono text-slate-600 dark:text-slate-300 break-all">{row.modelNumber}</p>
+                                        </div>
+                                        <div className="rounded-2xl bg-white dark:bg-slate-900 px-4 py-3">
+                                            <p className="text-[11px] font-black text-slate-400 mb-1">الكمية</p>
+                                            <p className="font-black text-slate-800 dark:text-slate-100">{row.soldQuantity}</p>
+                                        </div>
+                                        <div className="rounded-2xl bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
+                                            <p className="text-[11px] font-black text-amber-700 mb-1">إجمالي الجملة</p>
+                                            <p className="font-black text-amber-700 break-words">ل.س{row.wholesaleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                        </div>
+                                        <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 px-4 py-3">
+                                            <p className="text-[11px] font-black text-emerald-700 mb-1">إجمالي البيع</p>
+                                            <p className="font-black text-emerald-700 break-words">ل.س{row.salesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                        </div>
+                                    </div>
+                                    <div className={`rounded-2xl px-4 py-3 ${row.netProfit >= 0 ? "bg-blue-50 dark:bg-blue-900/20" : "bg-red-50 dark:bg-red-900/20"}`}>
+                                        <p className={`text-[11px] font-black mb-1 ${row.netProfit >= 0 ? "text-blue-700" : "text-red-600"}`}>صافي الربح</p>
+                                        <p className={`font-black break-words ${row.netProfit >= 0 ? "text-blue-700" : "text-red-600"}`}>
+                                            ل.س{row.netProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </div>
             )}
