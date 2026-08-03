@@ -130,6 +130,54 @@ const getDateRangeByFilter = (
   return { from: toDateOnly(firstOfMonth), to: toDateOnly(today) };
 };
 
+const WHATSAPP_NUMBER = "963944692928";
+
+const invoiceTypeLabel = (type: string) =>
+  type === "revenue" ? "فاتورة مقبوضات" : type === "expenses" ? "فاتورة مدفوعات" : "بند أخرى";
+
+const buildInvoiceWhatsAppMessage = (data: {
+  type: string;
+  clientName: string;
+  status: string;
+  items: any[];
+  subTotal: number;
+  overallDiscount: number;
+  grandTotal: number;
+  date: string;
+}) => {
+  const lines: string[] = [
+    `🧾 ${invoiceTypeLabel(data.type)}`,
+    `👤 العميل: ${data.clientName}`,
+    `📌 الحالة: ${data.status}`,
+    `📅 التاريخ: ${new Date(data.date).toLocaleString("ar-SY")}`,
+    "",
+    "📦 المواد:",
+  ];
+
+  data.items.forEach((item, i) => {
+    const name = item.name || item.note || "بند";
+    const model = item.modelNumber ? ` (${item.modelNumber})` : "";
+    lines.push(`${i + 1}. ${name}${model}`);
+    lines.push(`   الكمية: ${item.quantity} × السعر: ${Number(item.price).toLocaleString()} ل.س`);
+    if (Number(item.discount) > 0) {
+      lines.push(`   الخصم: ${Number(item.discount).toLocaleString()} ل.س`);
+    }
+    if (item.note && item.name) {
+      lines.push(`   ملاحظة: ${item.note}`);
+    }
+    lines.push(`   الإجمالي: ${Number(item.total).toLocaleString()} ل.س`);
+  });
+
+  lines.push("");
+  lines.push(`المجموع الفرعي: ${Number(data.subTotal).toLocaleString()} ل.س`);
+  if (Number(data.overallDiscount) > 0) {
+    lines.push(`خصم الفاتورة: ${Number(data.overallDiscount).toLocaleString()} ل.س`);
+  }
+  lines.push(`💰 الإجمالي النهائي: ${Number(data.grandTotal).toLocaleString()} ل.س`);
+
+  return lines.join("\n");
+};
+
 /* ========= Hook ========= */
 export function useInvoices() {
   const { user } = useAuth();
@@ -402,6 +450,9 @@ export function useInvoices() {
 
       axios.post("https://kyzendev.app.n8n.cloud/webhook/e6f93672-158d-437b-84fc-fdda3b2a62b8", invoiceData)
         .catch(console.error);
+
+      const whatsappMessage = buildInvoiceWhatsAppMessage(invoiceData);
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMessage)}`, "_blank");
 
       setClient("");
       setStatus("مدفوعة");
