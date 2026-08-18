@@ -1,6 +1,7 @@
 "use client";
+import { useState } from "react";
 import {
-    ArrowDownCircle, ArrowUpCircle, Plus, CircleDollarSign
+    ArrowDownCircle, ArrowUpCircle, Plus, CircleDollarSign, Search
 } from "lucide-react";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
@@ -42,6 +43,16 @@ export default function InvoicesDashboard() {
         setCustomFrom,
         setCustomTo,
     } = invoices;
+
+    const [productSearch, setProductSearch] = useState("");
+    const filteredProductProfitAnalysis = productProfitAnalysis.filter((row) => {
+        const q = productSearch.trim().toLowerCase();
+        if (!q) return true;
+        return (
+            row.productName.toLowerCase().includes(q) ||
+            (row.modelNumber ?? "").toLowerCase().includes(q)
+        );
+    });
 
     return (
         <div className="space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 overflow-x-hidden" dir="rtl">
@@ -113,6 +124,16 @@ export default function InvoicesDashboard() {
                     <div className="px-4 sm:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800">
                         <h3 className="text-lg sm:text-xl font-black text-slate-800 dark:text-slate-100">تحليل ربح المبيعات لكل منتج</h3>
                         <p className="text-slate-500 text-sm mt-1">يتم احتساب صافي الربح = سعر البيع - سعر الجملة حسب البنود المباعة ضمن الفلتر الحالي.</p>
+                        <div className="relative mt-4 max-w-md">
+                            <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                value={productSearch}
+                                onChange={(e) => setProductSearch(e.target.value)}
+                                placeholder="ابحث باسم المنتج أو رقم الموديل..."
+                                className="w-full pr-11 pl-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
                         <div className="mt-4 flex flex-wrap gap-3 text-sm font-bold">
                             <span className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700">إجمالي البيع: ل.س{monthlySalesTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             <span className="px-4 py-2 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-700">إجمالي الجملة: ل.س{monthlyWholesaleTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
@@ -135,12 +156,12 @@ export default function InvoicesDashboard() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {productProfitAnalysis.length === 0 ? (
+                                {filteredProductProfitAnalysis.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد مبيعات ضمن الفلتر الحالي</td>
+                                        <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد نتائج مطابقة</td>
                                     </tr>
                                 ) : (
-                                    productProfitAnalysis.map((row) => (
+                                    filteredProductProfitAnalysis.map((row) => (
                                         <tr key={row.productId} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="px-8 py-4 font-bold text-slate-800 dark:text-slate-100">{row.productName}</td>
                                             <td className="px-8 py-4 text-slate-500 font-mono">{row.modelNumber}</td>
@@ -158,10 +179,10 @@ export default function InvoicesDashboard() {
                     </div>
 
                     <div className="md:hidden p-3 space-y-3">
-                        {productProfitAnalysis.length === 0 ? (
-                            <div className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-4 py-8 text-center text-slate-400">لا توجد مبيعات ضمن الفلتر الحالي</div>
+                        {filteredProductProfitAnalysis.length === 0 ? (
+                            <div className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-4 py-8 text-center text-slate-400">لا توجد نتائج مطابقة</div>
                         ) : (
-                            productProfitAnalysis.map((row) => (
+                            filteredProductProfitAnalysis.map((row) => (
                                 <div key={row.productId} className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 p-4 space-y-3">
                                     <div>
                                         <p className="text-[11px] font-black text-slate-400 mb-1">المنتج</p>
