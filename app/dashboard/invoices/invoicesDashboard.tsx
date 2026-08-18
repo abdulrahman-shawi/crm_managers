@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    ArrowDownCircle, ArrowUpCircle, Plus, CircleDollarSign, Search
+    ArrowDownCircle, ArrowUpCircle, Plus, CircleDollarSign, Search, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { useCustomers } from "@/hooks/customers";
 import { useProductForm } from "@/hooks/products";
@@ -53,6 +53,20 @@ export default function InvoicesDashboard() {
             (row.modelNumber ?? "").toLowerCase().includes(q)
         );
     });
+
+    const ANALYSIS_PAGE_SIZE = 10;
+    const [analysisPage, setAnalysisPage] = useState(1);
+
+    useEffect(() => {
+        setAnalysisPage(1);
+    }, [productSearch, dateFilter, customFrom, customTo]);
+
+    const analysisTotalPages = Math.max(1, Math.ceil(filteredProductProfitAnalysis.length / ANALYSIS_PAGE_SIZE));
+    const safeAnalysisPage = Math.min(analysisPage, analysisTotalPages);
+    const pagedProductProfitAnalysis = filteredProductProfitAnalysis.slice(
+        (safeAnalysisPage - 1) * ANALYSIS_PAGE_SIZE,
+        safeAnalysisPage * ANALYSIS_PAGE_SIZE
+    );
 
     return (
         <div className="space-y-6 md:space-y-8 p-3 sm:p-4 md:p-8 overflow-x-hidden" dir="rtl">
@@ -161,7 +175,7 @@ export default function InvoicesDashboard() {
                                         <td colSpan={6} className="text-center py-10 text-slate-400">لا توجد نتائج مطابقة</td>
                                     </tr>
                                 ) : (
-                                    filteredProductProfitAnalysis.map((row) => (
+                                    pagedProductProfitAnalysis.map((row) => (
                                         <tr key={row.productId} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                             <td className="px-8 py-4 font-bold text-slate-800 dark:text-slate-100">{row.productName}</td>
                                             <td className="px-8 py-4 text-slate-500 font-mono">{row.modelNumber}</td>
@@ -182,7 +196,7 @@ export default function InvoicesDashboard() {
                         {filteredProductProfitAnalysis.length === 0 ? (
                             <div className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-4 py-8 text-center text-slate-400">لا توجد نتائج مطابقة</div>
                         ) : (
-                            filteredProductProfitAnalysis.map((row) => (
+                            pagedProductProfitAnalysis.map((row) => (
                                 <div key={row.productId} className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 p-4 space-y-3">
                                     <div>
                                         <p className="text-[11px] font-black text-slate-400 mb-1">المنتج</p>
@@ -216,6 +230,28 @@ export default function InvoicesDashboard() {
                             ))
                         )}
                     </div>
+
+                    {analysisTotalPages > 1 && (
+                        <div className="flex items-center justify-center gap-3 px-4 py-4 border-t border-slate-100 dark:border-slate-800">
+                            <button
+                                onClick={() => setAnalysisPage((p) => Math.max(1, p - 1))}
+                                disabled={safeAnalysisPage === 1}
+                                className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                <ChevronRight size={16} /> السابق
+                            </button>
+                            <span className="text-sm font-black text-slate-500">
+                                صفحة {safeAnalysisPage} من {analysisTotalPages}
+                            </span>
+                            <button
+                                onClick={() => setAnalysisPage((p) => Math.min(analysisTotalPages, p + 1))}
+                                disabled={safeAnalysisPage === analysisTotalPages}
+                                className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                            >
+                                التالي <ChevronLeft size={16} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
             {/* الإجرائات */}

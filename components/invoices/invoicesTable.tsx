@@ -1,4 +1,8 @@
-import { Eye } from "lucide-react";
+"use client";
+import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Eye } from "lucide-react";
+
+const PAGE_SIZE = 10;
 
 export default function InvoicesTable({invoices} : any) {
     const {
@@ -21,6 +25,15 @@ export default function InvoicesTable({invoices} : any) {
         getStatusStyle,
     } = invoices;
         const currentItems = activeTab === "revenue" ? revenues : activeTab === "expenses" ? expenses : others;
+        const [page, setPage] = useState(1);
+
+        useEffect(() => {
+            setPage(1);
+        }, [activeTab]);
+
+        const totalPages = Math.max(1, Math.ceil(currentItems.length / PAGE_SIZE));
+        const safePage = Math.min(page, totalPages);
+        const pagedItems = currentItems.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
   return (
         <div className="bg-white dark:bg-slate-900 rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
                                 <div className="hidden md:block overflow-x-auto">
@@ -48,7 +61,7 @@ export default function InvoicesTable({invoices} : any) {
                             </tr>
                         ) : (
                             /* عرض البيانات */
-                            currentItems.map((item:any) => (
+                            pagedItems.map((item:any) => (
                                 <tr key={item.id} className="border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                                     <td className="px-8 py-5 font-mono text-sm font-bold text-blue-600">{item.id}</td>
                                     <td className="px-8 py-5 font-bold">{item.party}</td>
@@ -82,7 +95,7 @@ export default function InvoicesTable({invoices} : any) {
                     ) : currentItems.length === 0 ? (
                         <div className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 px-4 py-8 text-center text-slate-400">لا توجد فواتير لعرضها</div>
                     ) : (
-                        currentItems.map((item: any) => (
+                        pagedItems.map((item: any) => (
                             <div key={item.id} className="rounded-3xl border border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/40 p-4 space-y-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
@@ -122,6 +135,28 @@ export default function InvoicesTable({invoices} : any) {
                         ))
                     )}
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-3 px-4 py-4 border-t border-slate-100 dark:border-slate-800">
+                        <button
+                            onClick={() => setPage((p) => Math.max(1, p - 1))}
+                            disabled={safePage === 1}
+                            className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            <ChevronRight size={16} /> السابق
+                        </button>
+                        <span className="text-sm font-black text-slate-500">
+                            صفحة {safePage} من {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={safePage === totalPages}
+                            className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            التالي <ChevronLeft size={16} />
+                        </button>
+                    </div>
+                )}
             </div>
   );
 }
