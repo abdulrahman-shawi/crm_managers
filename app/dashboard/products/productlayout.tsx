@@ -1,6 +1,7 @@
 "use client";
+import { useMemo } from "react";
 import {
-  Package, Plus, Search
+  Coins, Package, Plus, Search, TrendingUp
 } from "lucide-react";
 import { AddProductModal } from "@/components/AddProductModal";
 import { useCategories } from "@/hooks/categories";
@@ -24,7 +25,26 @@ export default function Productslayout({ current }: any) {
     searchTerm,
     setSearchTerm,
     setCurrentPage,
+    products,
+    exchangeRate,
   } = productForm;
+
+  // --- إجماليات الجملة والمبيع (محسوبة من كل المنتجات) ---
+  const { totalCost, totalSale, expectedProfit } = useMemo(() => {
+    const rate = Number(exchangeRate || 1);
+    let cost = 0;
+    let sale = 0;
+    for (const p of products) {
+      const factor = p.pricingCurrency === "USD" ? rate : 1;
+      const qty = Number(p.stock) || 0;
+      cost += Number(p.sourcePrice ?? p.price) * factor * qty;
+      sale += Number(p.price) * factor * qty;
+    }
+    return { totalCost: cost, totalSale: sale, expectedProfit: sale - cost };
+  }, [products, exchangeRate]);
+
+  const formatSyp = (n: number) =>
+    `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ل.س`;
 
   // --- منطق التصفية والبحث (useMemo للأداء العالي) ---
 
@@ -73,6 +93,47 @@ export default function Productslayout({ current }: any) {
           >
             <Plus size={18} /> عرض المنتجات المنخفضة
           </button>
+        </div>
+      </div>
+
+      {/* كروت الإجماليات: الجملة والمبيع */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* إجمالي جملة المواد */}
+        <div className="relative overflow-hidden p-6 bg-white dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <Coins className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+            </div>
+            <span className="text-xs font-bold text-slate-400">{products.length} صنف</span>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium tracking-wide">
+              إجمالي جملة المواد
+            </h3>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              {formatSyp(totalCost)}
+            </p>
+          </div>
+        </div>
+
+        {/* إجمالي مبيع المواد */}
+        <div className="relative overflow-hidden p-6 bg-white dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300 group">
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl group-hover:scale-110 transition-transform duration-300">
+              <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              ربح متوقع: {formatSyp(expectedProfit)}
+            </span>
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium tracking-wide">
+              إجمالي مبيع المواد
+            </h3>
+            <p className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              {formatSyp(totalSale)}
+            </p>
+          </div>
         </div>
       </div>
 
