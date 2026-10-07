@@ -1,6 +1,7 @@
 import type { Metadata , Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Script from "next/script";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import AuthWrapper from "@/lib/authprovider";
 
@@ -41,6 +42,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ar" dir="rtl" >
       <body>
            <AuthWrapper>{children}</AuthWrapper>
+           <Script
+             src="https://whatsapp-mu-five.vercel.app/widget.js"
+             data-agent-id="cmul3sbty0003vmoo12awsfz2"
+             strategy="afterInteractive"
+           />
       </body>
     </html>
   );
