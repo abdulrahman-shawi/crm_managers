@@ -7,6 +7,22 @@ const withPWA = withPWAInit({
   reloadOnOnline: true,
   swMinify: true,
   disable: process.env.NODE_ENV === "development",
+  // السماح بتجاوز قواعد التخزين الافتراضية عبر cacheName نفسه
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        // عدم تخزين ردود /api/ إطلاقاً حتى تظهر الأسعار والفواتير المحدثة فوراً
+        urlPattern: ({ sameOrigin, url: { pathname } }) =>
+          sameOrigin &&
+          pathname.startsWith("/api/") &&
+          !pathname.startsWith("/api/auth/callback"),
+        handler: "NetworkOnly",
+        method: "GET",
+        options: { cacheName: "apis" },
+      },
+    ],
+  },
 });
 
 /** @type {import('next').NextConfig} */
