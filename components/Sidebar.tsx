@@ -5,7 +5,8 @@ import {
   Receipt, Box, FileText, PieChart, ShieldCheck, HelpCircle, LogOut, 
   Users2,
   Settings2,
-  ArrowRightLeft
+  ArrowRightLeft,
+  PanelsTopLeft
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +41,7 @@ export const Sidebar = ({ isDesktopCollapsed, isMobileOpen, onDesktopToggle, onM
       items: [
         { icon: Receipt, label: "الأقسام", href: "/dashboard/categories" },
         { icon: Box, label: "المخزن والمنتجات", href: "/dashboard/products" },
+        { icon: PanelsTopLeft, label: "معاينة المكونات", href: "/dashboard/flowbite" },
         { icon: Users, label: "العملاء", href: "/dashboard/customers" },
         { icon: ArrowRightLeft, label: "المرتجعات", href: "/dashboard/returns" },
         { icon: FileText, label: "المصاريف الثابتة", href: "/dashboard/fixed-expenses" },
