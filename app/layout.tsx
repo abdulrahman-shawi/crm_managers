@@ -44,7 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
            <AuthWrapper>{children}</AuthWrapper>
            <Script
              src="https://whatsapp-mu-five.vercel.app/widget.js"
-             data-agent-id="cmul3sbty0003vmoo12awsfz2"
+             data-agent-id="cwkagentsales0000000000001"
              strategy="afterInteractive"
            />
       </body>
